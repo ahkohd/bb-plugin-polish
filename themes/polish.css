@@ -1,18 +1,25 @@
 /*
  * Polish: a clean, minimal bb in the style of Capy (capy.ai).
  *
- * Rules of the look: neutral cool greys, a grey sidebar beside a near-white
- * main area, hairline borders made of translucent black (or white in dark
- * mode), no decorative shadows, 6px radii, Inter at weight 450, and one blue
- * accent for primary actions, counts and links. Palette values are Capy's own
- * app tokens. Everything lives in this one theme file, so picking another
- * theme in Settings > Appearance undoes all of it.
+ * Rules of the look: neutral cool greys; a grey window with the main area on
+ * a rounded panel; hairline borders of translucent black (white in dark
+ * mode); no decorative shadows, only soft ones on things that float; 6px
+ * radii; Inter at weight 450; one accent for primary actions, counts, links
+ * and focus. Palette values are Capy's own app tokens.
+ *
+ * Variants come from <html> attributes that Polish's content script sets
+ * from Settings > Polish: data-polish-layout (inset | flat),
+ * data-polish-density (comfortable | compact) and data-polish-accent
+ * (blue | graphite | violet | green | orange). Without them the defaults
+ * apply: inset, comfortable, blue.
+ *
+ * Everything lives in this one theme file, so picking another theme in
+ * Settings > Appearance undoes all of it.
  */
 
 /* ---------- Light ---------- */
 :root, .light {
-  /* Capy roles */
-  --cp-frame: #f2f2f4;          /* sidebar and window */
+  --cp-frame: #f2f2f4;          /* window and sidebar */
   --cp-panel: #fafafb;          /* main area */
   --cp-card: #ffffff;           /* composer, cards, menus */
   --cp-fill: #ededee;           /* user message, chips */
@@ -20,49 +27,62 @@
   --cp-text: #1e1e1e;
   --cp-text-2: color-mix(in oklch, var(--cp-text) 62%, #ececec);
   --cp-text-3: color-mix(in oklch, var(--cp-text) 48%, #ececec);
-  --cp-text-4: color-mix(in oklch, var(--cp-text) 36%, #ececec);
   --cp-line: rgb(0 0 0 / 0.08);
   --cp-line-2: rgb(0 0 0 / 0.11);
   --cp-line-3: rgb(0 0 0 / 0.15);
   --cp-hover: rgb(0 0 0 / 0.04);
   --cp-active: rgb(0 0 0 / 0.06);
-  --cp-blue: #3b5de8;
-  --cp-link: #2a44af;
   --cp-red: #c7332f;
   --cp-amber: #a87f09;
   --cp-yellow: #eccd40;
   --cp-green: #00a20b;
   --cp-green-text: #0b7a14;
-  --cp-info: #0083e3;
   --cp-purple: #8a4fc4;
+  --cp-float-shadow: 0 10px 28px -8px rgb(0 0 0 / 0.14), 0 2px 6px -2px rgb(0 0 0 / 0.06);
+
+  /* Accent: blue unless Settings > Polish says otherwise. */
+  --pl-accent: #3b5de8;
+  --pl-accent-fg: #ffffff;
+  --pl-link: #2a44af;
 }
 
 /* ---------- Dark ---------- */
 .dark {
   --cp-frame: #0a0a0b;
   --cp-panel: #131314;
-  --cp-card: #181819;
-  --cp-fill: #202021;
-  --cp-selected: #222224;
+  --cp-card: #19191a;
+  --cp-fill: #222224;
+  --cp-selected: #242426;
   --cp-text: #f5f5f5;
   --cp-text-2: color-mix(in oklch, var(--cp-text) 68%, #0a0a0b);
   --cp-text-3: color-mix(in oklch, var(--cp-text) 52%, #0a0a0b);
-  --cp-text-4: color-mix(in oklch, var(--cp-text) 38%, #0a0a0b);
   --cp-line: rgb(255 255 255 / 0.08);
   --cp-line-2: rgb(255 255 255 / 0.12);
   --cp-line-3: rgb(255 255 255 / 0.16);
   --cp-hover: rgb(255 255 255 / 0.05);
   --cp-active: rgb(255 255 255 / 0.08);
-  --cp-blue: #456af6;
-  --cp-link: #8aa4ff;
   --cp-red: #e5534b;
   --cp-amber: #f1d357;
   --cp-yellow: #eccd40;
   --cp-green: #2fbf3a;
   --cp-green-text: #4fcf5a;
-  --cp-info: #3aa0f0;
   --cp-purple: #b48cf0;
+  --cp-float-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 2px 8px -2px rgb(0 0 0 / 0.4);
+
+  --pl-accent: #456af6;
+  --pl-accent-fg: #ffffff;
+  --pl-link: #8aa4ff;
 }
+
+/* ---------- Accents ---------- */
+html[data-polish-accent="graphite"] { --pl-accent: #1e1e1e; --pl-accent-fg: #ffffff; --pl-link: #1e1e1e; }
+html.dark[data-polish-accent="graphite"] { --pl-accent: #f5f5f5; --pl-accent-fg: #0a0a0b; --pl-link: #f5f5f5; }
+html[data-polish-accent="violet"] { --pl-accent: #6e4fd8; --pl-accent-fg: #ffffff; --pl-link: #5636c0; }
+html.dark[data-polish-accent="violet"] { --pl-accent: #8b72f0; --pl-link: #b3a3ff; }
+html[data-polish-accent="green"] { --pl-accent: #1a7f45; --pl-accent-fg: #ffffff; --pl-link: #146a39; }
+html.dark[data-polish-accent="green"] { --pl-accent: #2fa866; --pl-link: #6fd49a; }
+html[data-polish-accent="orange"] { --pl-accent: #d4561c; --pl-accent-fg: #ffffff; --pl-link: #b0440f; }
+html.dark[data-polish-accent="orange"] { --pl-accent: #ee7a3f; --pl-link: #f5a070; }
 
 /* ---------- Roles onto bb tokens (both modes) ---------- */
 :root, .light, .dark {
@@ -74,8 +94,8 @@
   --card-foreground: var(--cp-text);
   --popover: var(--cp-card);
   --popover-foreground: var(--cp-text);
-  --primary: var(--cp-blue);
-  --primary-foreground: #ffffff;
+  --primary: var(--pl-accent);
+  --primary-foreground: var(--pl-accent-fg);
   --secondary: var(--cp-fill);
   --secondary-foreground: var(--cp-text);
   --accent: var(--cp-hover);
@@ -84,8 +104,8 @@
   --muted-foreground: var(--cp-text-2);
   --subtle-foreground: var(--cp-text-3);
   --readback-foreground: var(--cp-text-2);
-  --timeline-accent: var(--cp-blue);
-  --file-accent: var(--cp-link);
+  --timeline-accent: var(--pl-accent);
+  --file-accent: var(--pl-link);
 
   --destructive: var(--cp-red);
   --destructive-text: var(--cp-red);
@@ -103,7 +123,7 @@
   --border-seam: var(--cp-line);
   --border-seam-vertical: var(--cp-line);
   --input: var(--cp-line-2);
-  --ring: color-mix(in oklch, var(--cp-blue) 45%, transparent);
+  --ring: color-mix(in oklch, var(--pl-accent) 50%, transparent);
 
   --state-hover: var(--cp-hover);
   --state-active: var(--cp-active);
@@ -124,10 +144,10 @@
 
   --sidebar: var(--cp-frame);
   --sidebar-foreground: var(--cp-text);
-  --sidebar-accent: var(--cp-selected);
+  --sidebar-accent: var(--cp-hover);
   --sidebar-accent-foreground: var(--cp-text);
   --sidebar-border: var(--cp-line);
-  --sidebar-ring: var(--cp-line-3);
+  --sidebar-ring: var(--ring);
 
   --radius: 0.375rem;
   --font-weight-normal: 450;
@@ -139,10 +159,10 @@
   --shadow-sm: none;
   --shadow: none;
   --shadow-lift: none;
-  --shadow-md: 0 0 0 1px var(--cp-line), 0 4px 12px -2px rgb(0 0 0 / 0.08);
-  --shadow-lg: 0 0 0 1px var(--cp-line), 0 8px 24px -6px rgb(0 0 0 / 0.12);
-  --shadow-xl: 0 0 0 1px var(--cp-line), 0 12px 32px -8px rgb(0 0 0 / 0.16);
-  --shadow-2xl: 0 0 0 1px var(--cp-line), 0 16px 40px -10px rgb(0 0 0 / 0.2);
+  --shadow-md: var(--cp-float-shadow);
+  --shadow-lg: var(--cp-float-shadow);
+  --shadow-xl: var(--cp-float-shadow);
+  --shadow-2xl: var(--cp-float-shadow);
 }
 
 /* ANSI: neutral greys with Capy's status colours. */
@@ -172,9 +192,38 @@ body.bb-app-shell {
   font-weight: 450;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv11";
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: color-mix(in oklch, var(--pl-accent) 22%, transparent);
 }
 
-/* ---------- Chrome: grey sidebar, near-white main, hairline seams ---------- */
+/* ---------- Layout: grey window, main area on a rounded panel ---------- */
+/* bb's desktop app draws its own window frame; this applies to the browser
+   layout on windows 768px and wider. Settings > Polish > Layout > Flat
+   turns it off. */
+@media (min-width: 768px) {
+  html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) {
+    background: var(--cp-frame);
+  }
+  html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) [data-sidebar="panel"] {
+    border-right-color: transparent;
+  }
+  html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"] {
+    height: calc(100% - 16px);
+    margin: 8px 8px 8px 0;
+    border: 1px solid var(--cp-line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--cp-panel);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  }
+  html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) > .peer[data-state="collapsed"] ~ main[data-sidebar="inset"] {
+    margin-left: 8px;
+  }
+}
+
+/* ---------- Chrome ---------- */
 [data-sidebar="panel"] {
   border-color: var(--cp-line);
 }
@@ -186,11 +235,72 @@ body.bb-app-shell {
   background: var(--cp-panel);
   border-bottom-color: var(--cp-line);
 }
+.bb-thread-title {
+  font-weight: 500;
+}
 
-/* Selected thread: a plain grey fill, as in Capy. */
-[data-sidebar-rename-row].bg-state-active {
-  background: var(--cp-selected);
+/* Selected thread: a plain grey fill, as in Capy. Covers bb's list and
+   lists that use bb's row classes, such as Beside. */
+[data-sidebar-rename-row].bg-state-active,
+.bb-sidebar-selected-row {
+  background: var(--cp-selected) !important;
   border-radius: var(--radius);
+}
+
+/* ---------- Density ---------- */
+html[data-polish-density="compact"] {
+  --bb-sidebar-row-height: 26px;
+}
+html[data-polish-density="compact"] [role="menuitem"],
+html[data-polish-density="compact"] [role="option"] {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+html[data-polish-density="compact"] [data-markdown-preview] {
+  line-height: 1.55;
+}
+
+/* ---------- Floating surfaces: menus, popovers, palette, dialogs ---------- */
+[data-radix-popper-content-wrapper] > [data-bb-portaled-overlay],
+[role="menu"][data-bb-portaled-overlay],
+[role="dialog"][data-bb-portaled-overlay] {
+  border-color: var(--cp-line-2);
+  background-color: var(--cp-card);
+}
+[role="menu"][data-bb-portaled-overlay] {
+  border-radius: 10px;
+  padding: 4px;
+}
+[role="menuitem"],
+[role="menuitemradio"],
+[role="menuitemcheckbox"] {
+  border-radius: 6px;
+}
+[data-testid="command-palette"] {
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+.bg-black\/40[data-bb-portaled-overlay] {
+  background: rgb(0 0 0 / 0.2);
+  backdrop-filter: blur(2px);
+}
+.dark .bg-black\/40[data-bb-portaled-overlay] {
+  background: rgb(0 0 0 / 0.5);
+}
+
+/* ---------- Controls ---------- */
+/* Send: the accent, a soft square. */
+[data-promptbox-submit-action] {
+  background: var(--pl-accent);
+  color: var(--pl-accent-fg);
+  border-radius: 8px;
+}
+[data-promptbox-submit-action]:hover {
+  background: color-mix(in oklch, var(--pl-accent) 88%, black);
+}
+/* Switches: the accent when on. */
+[role="switch"][data-state="checked"] {
+  background: var(--pl-accent);
 }
 
 /* ---------- Messages ---------- */
@@ -198,7 +308,12 @@ body.bb-app-shell {
 [data-message-column] .group\/message > div > div:first-child {
   background: var(--cp-fill);
   border-color: transparent;
-  border-radius: 10px;
+  border-radius: 12px;
+}
+
+/* Unread divider in the accent. */
+[data-testid="thread-unread-divider"] {
+  color: var(--pl-accent);
 }
 
 /* Inline code: a quiet grey chip. */
@@ -211,9 +326,9 @@ body.bb-app-shell {
   font-size: 0.85em;
 }
 
-/* Links: Capy blue, no underline until hover. */
+/* Links: the link colour, no underline until hover. */
 [data-markdown-preview] a {
-  color: var(--cp-link);
+  color: var(--pl-link);
   text-decoration: none;
 }
 [data-markdown-preview] a:hover {
@@ -250,10 +365,11 @@ body.bb-app-shell {
 
 /* ---------- Composer: a white card with a hairline ---------- */
 form[data-promptbox] {
-  border-radius: 8px;
+  border-radius: 12px;
   border-color: var(--cp-line-2);
   background: var(--cp-card);
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 form[data-promptbox]:focus-within {
   border-color: var(--cp-line-3);
@@ -276,4 +392,10 @@ form[data-promptbox]:focus-within {
 [data-testid="sidebar-machines-attention-badge"],
 [data-testid="sidebar-update-button"] {
   display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  form[data-promptbox] {
+    transition: none;
+  }
 }
