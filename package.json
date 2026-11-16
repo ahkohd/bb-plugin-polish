@@ -8,7 +8,7 @@
   },
   "bb": {
     "name": "Polish [Experimental]",
-    "description": "A clean, minimal look for bb on Steph Ango's Flexoki palette: ink on paper, hairline borders, no decorative shadows, and one sparing accent. Code blocks use the Flexoki code theme.",
+    "description": "A clean, minimal look for bb in the style of Capy: neutral cool greys, a grey sidebar beside a near-white main area, hairline borders, Inter at weight 450 and one blue accent.",
     "branding": {
       "icon": "Sparkles"
     },
@@ -17,8 +17,8 @@
     "themes": [
       {
         "id": "polish",
-        "name": "Polish (Flexoki)",
-        "description": "Clean and minimal, on the Flexoki palette",
+        "name": "Polish",
+        "description": "Clean and minimal, in the style of Capy",
         "css": "./themes/polish.css",
         "codeTheme": {
           "light": "./themes/code/flexoki-light.json",
@@ -33,5 +33,5 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
   },
-  "description": "A clean, minimal bb on the Flexoki palette."
+  "description": "A clean, minimal bb in the style of Capy."
 }

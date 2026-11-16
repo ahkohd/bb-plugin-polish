@@ -1,287 +1,225 @@
 /*
- * Polish: a clean, minimal bb on the Flexoki palette (stephango.com/flexoki).
+ * Polish: a clean, minimal bb in the style of Capy (capy.ai).
  *
- * Rules of the look: monochrome ink on paper, hairline borders, no decorative
- * shadows, small radii, and one sparing accent (Flexoki orange) for the
- * selected thread and focus. Palette tokens come first; the component rules
- * after them only remove noise. Everything lives in this one theme file, so
- * picking another theme in Settings > Appearance undoes all of it.
+ * Rules of the look: neutral cool greys, a grey sidebar beside a near-white
+ * main area, hairline borders made of translucent black (or white in dark
+ * mode), no decorative shadows, 6px radii, Inter at weight 450, and one blue
+ * accent for primary actions, counts and links. Palette values are Capy's own
+ * app tokens. Everything lives in this one theme file, so picking another
+ * theme in Settings > Appearance undoes all of it.
  */
-
-/* ---------- Flexoki palette ---------- */
-:root {
-  --fx-paper: #fffcf0;
-  --fx-50: #f2f0e5;
-  --fx-100: #e6e4d9;
-  --fx-150: #dad8ce;
-  --fx-200: #cecdc3;
-  --fx-300: #b7b5ac;
-  --fx-400: #9f9d96;
-  --fx-500: #878580;
-  --fx-600: #6f6e69;
-  --fx-700: #575653;
-  --fx-800: #403e3c;
-  --fx-850: #343331;
-  --fx-900: #282726;
-  --fx-950: #1c1b1a;
-  --fx-black: #100f0f;
-
-  --fx-red-400: #d14d41;      --fx-red-600: #af3029;
-  --fx-orange-400: #da702c;   --fx-orange-600: #bc5215;
-  --fx-yellow-400: #d0a215;   --fx-yellow-600: #ad8301;
-  --fx-green-400: #879a39;    --fx-green-600: #66800b;
-  --fx-cyan-400: #3aa99f;     --fx-cyan-600: #24837b;
-  --fx-blue-400: #4385be;     --fx-blue-600: #205ea6;
-  --fx-purple-400: #8b7ec8;   --fx-purple-600: #5e409d;
-  --fx-magenta-400: #ce5d97;  --fx-magenta-600: #a02f6f;
-}
 
 /* ---------- Light ---------- */
 :root, .light {
-  /* Flexoki roles: bg, bg-2, ui, ui-2, ui-3, tx-3, tx-2, tx */
-  --fx-bg: var(--fx-paper);
-  --fx-bg-2: var(--fx-50);
-  --fx-ui: var(--fx-100);
-  --fx-ui-2: var(--fx-150);
-  --fx-ui-3: var(--fx-200);
-  --fx-tx-3: var(--fx-300);
-  --fx-tx-2: var(--fx-600);
-  --fx-tx: var(--fx-black);
-  --fx-accent: var(--fx-orange-600);
-
-  --canvas: var(--fx-bg);
-  --ink: var(--fx-tx);
-  --background: var(--fx-bg);
-  --foreground: var(--fx-tx);
-  --card: var(--fx-bg);
-  --popover: var(--fx-bg);
-  --primary: var(--fx-tx);
-  --primary-foreground: var(--fx-bg);
-  --secondary: var(--fx-bg-2);
-  --accent: var(--fx-bg-2);
-  --muted: var(--fx-bg-2);
-  --muted-foreground: var(--fx-tx-2);
-  --subtle-foreground: var(--fx-500);
-  --readback-foreground: var(--fx-600);
-  --timeline-accent: var(--fx-blue-600);
-  --file-accent: var(--fx-blue-600);
-
-  --destructive: var(--fx-red-600);
-  --destructive-text: var(--fx-red-600);
-  --warning: var(--fx-orange-400);
-  --warning-text: var(--fx-orange-600);
-  --attention: var(--fx-yellow-400);
-  --success: var(--fx-green-400);
-  --success-foreground: var(--fx-green-600);
-  --diff-added: var(--fx-green-600);
-  --diff-removed: var(--fx-red-600);
-  --pr-merged: var(--fx-purple-600);
-
-  --border: var(--fx-ui);
-  --border-hairline: var(--fx-ui);
-  --border-seam: var(--fx-ui);
-  --border-seam-vertical: var(--fx-ui);
-  --input: var(--fx-ui-2);
-  --ring: var(--fx-ui-3);
-
-  --state-hover: color-mix(in oklab, var(--fx-tx) 4%, transparent);
-  --state-active: color-mix(in oklab, var(--fx-tx) 7%, transparent);
-  --surface-recessed: var(--fx-bg-2);
-  --surface-recessed-solid: var(--fx-bg-2);
-  --surface-recessed-soft-solid: var(--fx-bg-2);
-  --surface-raised: var(--fx-bg);
-  --surface-raised-solid: var(--fx-bg);
-  --surface-scrim: var(--fx-bg);
-  --surface-selected: var(--fx-bg-2);
-  --surface-selected-border: var(--fx-ui-2);
-
-  --pill-surface: var(--fx-bg);
-  --pill-surface-border: var(--fx-ui);
-  --pill-shadow: none;
-  --pill-surface-selected: var(--fx-bg-2);
-  --pill-surface-selected-border: var(--fx-ui-2);
-
-  --sidebar: var(--fx-bg);
-  --sidebar-foreground: var(--fx-tx);
-  --sidebar-accent: var(--fx-bg-2);
-  --sidebar-accent-foreground: var(--fx-tx);
-  --sidebar-border: var(--fx-ui);
-  --sidebar-ring: var(--fx-ui-3);
-
-  --radius: 0.375rem;
-  --shadow-2xs: none;
-  --shadow-xs: none;
-  --shadow-sm: none;
-  --shadow: none;
-  --shadow-lift: none;
-  --shadow-md: 0 4px 16px -4px rgb(16 15 15 / 0.08);
-  --shadow-lg: 0 8px 24px -8px rgb(16 15 15 / 0.12);
-  --shadow-xl: 0 12px 32px -10px rgb(16 15 15 / 0.14);
-  --shadow-2xl: 0 16px 40px -12px rgb(16 15 15 / 0.16);
-
-  --ansi-0: var(--fx-black);    --ansi-8: var(--fx-600);
-  --ansi-1: var(--fx-red-600);  --ansi-9: var(--fx-red-400);
-  --ansi-2: var(--fx-green-600); --ansi-10: var(--fx-green-400);
-  --ansi-3: var(--fx-yellow-600); --ansi-11: var(--fx-yellow-400);
-  --ansi-4: var(--fx-blue-600); --ansi-12: var(--fx-blue-400);
-  --ansi-5: var(--fx-magenta-600); --ansi-13: var(--fx-magenta-400);
-  --ansi-6: var(--fx-cyan-600); --ansi-14: var(--fx-cyan-400);
-  --ansi-7: var(--fx-200);      --ansi-15: var(--fx-paper);
+  /* Capy roles */
+  --cp-frame: #f2f2f4;          /* sidebar and window */
+  --cp-panel: #fafafb;          /* main area */
+  --cp-card: #ffffff;           /* composer, cards, menus */
+  --cp-fill: #ededee;           /* user message, chips */
+  --cp-selected: #e5e5e7;       /* selected row */
+  --cp-text: #1e1e1e;
+  --cp-text-2: color-mix(in oklch, var(--cp-text) 62%, #ececec);
+  --cp-text-3: color-mix(in oklch, var(--cp-text) 48%, #ececec);
+  --cp-text-4: color-mix(in oklch, var(--cp-text) 36%, #ececec);
+  --cp-line: rgb(0 0 0 / 0.08);
+  --cp-line-2: rgb(0 0 0 / 0.11);
+  --cp-line-3: rgb(0 0 0 / 0.15);
+  --cp-hover: rgb(0 0 0 / 0.04);
+  --cp-active: rgb(0 0 0 / 0.06);
+  --cp-blue: #3b5de8;
+  --cp-link: #2a44af;
+  --cp-red: #c7332f;
+  --cp-amber: #a87f09;
+  --cp-yellow: #eccd40;
+  --cp-green: #00a20b;
+  --cp-green-text: #0b7a14;
+  --cp-info: #0083e3;
+  --cp-purple: #8a4fc4;
 }
 
 /* ---------- Dark ---------- */
 .dark {
-  --fx-bg: var(--fx-black);
-  --fx-bg-2: var(--fx-950);
-  --fx-ui: var(--fx-900);
-  --fx-ui-2: var(--fx-850);
-  --fx-ui-3: var(--fx-800);
-  --fx-tx-3: var(--fx-700);
-  --fx-tx-2: var(--fx-500);
-  --fx-tx: var(--fx-200);
-  --fx-accent: var(--fx-orange-400);
+  --cp-frame: #0a0a0b;
+  --cp-panel: #131314;
+  --cp-card: #181819;
+  --cp-fill: #202021;
+  --cp-selected: #222224;
+  --cp-text: #f5f5f5;
+  --cp-text-2: color-mix(in oklch, var(--cp-text) 68%, #0a0a0b);
+  --cp-text-3: color-mix(in oklch, var(--cp-text) 52%, #0a0a0b);
+  --cp-text-4: color-mix(in oklch, var(--cp-text) 38%, #0a0a0b);
+  --cp-line: rgb(255 255 255 / 0.08);
+  --cp-line-2: rgb(255 255 255 / 0.12);
+  --cp-line-3: rgb(255 255 255 / 0.16);
+  --cp-hover: rgb(255 255 255 / 0.05);
+  --cp-active: rgb(255 255 255 / 0.08);
+  --cp-blue: #456af6;
+  --cp-link: #8aa4ff;
+  --cp-red: #e5534b;
+  --cp-amber: #f1d357;
+  --cp-yellow: #eccd40;
+  --cp-green: #2fbf3a;
+  --cp-green-text: #4fcf5a;
+  --cp-info: #3aa0f0;
+  --cp-purple: #b48cf0;
+}
 
-  --canvas: var(--fx-bg);
-  --ink: var(--fx-tx);
-  --background: var(--fx-bg);
-  --foreground: var(--fx-tx);
-  --card: var(--fx-bg);
-  --popover: var(--fx-bg-2);
-  --primary: var(--fx-tx);
-  --primary-foreground: var(--fx-bg);
-  --secondary: var(--fx-bg-2);
-  --accent: var(--fx-bg-2);
-  --muted: var(--fx-bg-2);
-  --muted-foreground: var(--fx-tx-2);
-  --subtle-foreground: var(--fx-600);
-  --readback-foreground: var(--fx-500);
-  --timeline-accent: var(--fx-blue-400);
-  --file-accent: var(--fx-blue-400);
+/* ---------- Roles onto bb tokens (both modes) ---------- */
+:root, .light, .dark {
+  --canvas: var(--cp-panel);
+  --ink: var(--cp-text);
+  --background: var(--cp-panel);
+  --foreground: var(--cp-text);
+  --card: var(--cp-card);
+  --card-foreground: var(--cp-text);
+  --popover: var(--cp-card);
+  --popover-foreground: var(--cp-text);
+  --primary: var(--cp-blue);
+  --primary-foreground: #ffffff;
+  --secondary: var(--cp-fill);
+  --secondary-foreground: var(--cp-text);
+  --accent: var(--cp-hover);
+  --accent-foreground: var(--cp-text);
+  --muted: var(--cp-fill);
+  --muted-foreground: var(--cp-text-2);
+  --subtle-foreground: var(--cp-text-3);
+  --readback-foreground: var(--cp-text-2);
+  --timeline-accent: var(--cp-blue);
+  --file-accent: var(--cp-link);
 
-  --destructive: var(--fx-red-400);
-  --destructive-text: var(--fx-red-400);
-  --warning: var(--fx-orange-400);
-  --warning-text: var(--fx-orange-400);
-  --attention: var(--fx-yellow-400);
-  --success: var(--fx-green-400);
-  --success-foreground: var(--fx-green-400);
-  --diff-added: var(--fx-green-400);
-  --diff-removed: var(--fx-red-400);
-  --pr-merged: var(--fx-purple-400);
+  --destructive: var(--cp-red);
+  --destructive-text: var(--cp-red);
+  --warning: var(--cp-yellow);
+  --warning-text: var(--cp-amber);
+  --attention: var(--cp-yellow);
+  --success: var(--cp-green);
+  --success-foreground: var(--cp-green-text);
+  --diff-added: var(--cp-green-text);
+  --diff-removed: var(--cp-red);
+  --pr-merged: var(--cp-purple);
 
-  --border: var(--fx-ui);
-  --border-hairline: var(--fx-ui);
-  --border-seam: var(--fx-ui);
-  --border-seam-vertical: var(--fx-ui);
-  --input: var(--fx-ui-2);
-  --ring: var(--fx-ui-3);
+  --border: var(--cp-line);
+  --border-hairline: var(--cp-line);
+  --border-seam: var(--cp-line);
+  --border-seam-vertical: var(--cp-line);
+  --input: var(--cp-line-2);
+  --ring: color-mix(in oklch, var(--cp-blue) 45%, transparent);
 
-  --state-hover: color-mix(in oklab, var(--fx-tx) 5%, transparent);
-  --state-active: color-mix(in oklab, var(--fx-tx) 8%, transparent);
-  --surface-recessed: var(--fx-bg-2);
-  --surface-recessed-solid: var(--fx-bg-2);
-  --surface-recessed-soft-solid: var(--fx-bg-2);
-  --surface-raised: var(--fx-bg-2);
-  --surface-raised-solid: var(--fx-bg-2);
-  --surface-scrim: var(--fx-bg);
-  --surface-selected: var(--fx-bg-2);
-  --surface-selected-border: var(--fx-ui-2);
+  --state-hover: var(--cp-hover);
+  --state-active: var(--cp-active);
+  --surface-recessed: var(--cp-frame);
+  --surface-recessed-solid: var(--cp-frame);
+  --surface-recessed-soft-solid: var(--cp-frame);
+  --surface-raised: var(--cp-card);
+  --surface-raised-solid: var(--cp-card);
+  --surface-scrim: var(--cp-panel);
+  --surface-selected: var(--cp-fill);
+  --surface-selected-border: var(--cp-line-2);
 
-  --pill-surface: var(--fx-bg);
-  --pill-surface-border: var(--fx-ui);
+  --pill-surface: var(--cp-card);
+  --pill-surface-border: var(--cp-line);
   --pill-shadow: none;
-  --pill-surface-selected: var(--fx-bg-2);
-  --pill-surface-selected-border: var(--fx-ui-2);
+  --pill-surface-selected: var(--cp-fill);
+  --pill-surface-selected-border: var(--cp-line-2);
 
-  --sidebar: var(--fx-bg);
-  --sidebar-foreground: var(--fx-tx);
-  --sidebar-accent: var(--fx-bg-2);
-  --sidebar-accent-foreground: var(--fx-tx);
-  --sidebar-border: var(--fx-ui);
-  --sidebar-ring: var(--fx-ui-3);
+  --sidebar: var(--cp-frame);
+  --sidebar-foreground: var(--cp-text);
+  --sidebar-accent: var(--cp-selected);
+  --sidebar-accent-foreground: var(--cp-text);
+  --sidebar-border: var(--cp-line);
+  --sidebar-ring: var(--cp-line-3);
+
+  --radius: 0.375rem;
+  --font-weight-normal: 450;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 560;
 
   --shadow-2xs: none;
   --shadow-xs: none;
   --shadow-sm: none;
   --shadow: none;
   --shadow-lift: none;
-  --shadow-md: 0 4px 16px -4px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 8px 24px -8px rgb(0 0 0 / 0.6);
-  --shadow-xl: 0 12px 32px -10px rgb(0 0 0 / 0.65);
-  --shadow-2xl: 0 16px 40px -12px rgb(0 0 0 / 0.7);
+  --shadow-md: 0 0 0 1px var(--cp-line), 0 4px 12px -2px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 0 0 1px var(--cp-line), 0 8px 24px -6px rgb(0 0 0 / 0.12);
+  --shadow-xl: 0 0 0 1px var(--cp-line), 0 12px 32px -8px rgb(0 0 0 / 0.16);
+  --shadow-2xl: 0 0 0 1px var(--cp-line), 0 16px 40px -10px rgb(0 0 0 / 0.2);
+}
 
-  --ansi-0: var(--fx-black);    --ansi-8: var(--fx-700);
-  --ansi-1: var(--fx-red-400);  --ansi-9: var(--fx-red-400);
-  --ansi-2: var(--fx-green-400); --ansi-10: var(--fx-green-400);
-  --ansi-3: var(--fx-yellow-400); --ansi-11: var(--fx-yellow-400);
-  --ansi-4: var(--fx-blue-400); --ansi-12: var(--fx-blue-400);
-  --ansi-5: var(--fx-magenta-400); --ansi-13: var(--fx-magenta-400);
-  --ansi-6: var(--fx-cyan-400); --ansi-14: var(--fx-cyan-400);
-  --ansi-7: var(--fx-200);      --ansi-15: var(--fx-paper);
+/* ANSI: neutral greys with Capy's status colours. */
+:root, .light {
+  --ansi-0: #1e1e1e;  --ansi-8: #6d6d6d;
+  --ansi-1: #c7332f;  --ansi-9: #e5534b;
+  --ansi-2: #0b7a14;  --ansi-10: #00a20b;
+  --ansi-3: #a87f09;  --ansi-11: #c99a06;
+  --ansi-4: #3b5de8;  --ansi-12: #5a78ee;
+  --ansi-5: #8a4fc4;  --ansi-13: #ae69b1;
+  --ansi-6: #267b7a;  --ansi-14: #4db4b0;
+  --ansi-7: #d1d1d1;  --ansi-15: #ffffff;
+}
+.dark {
+  --ansi-0: #0a0a0b;  --ansi-8: #6d6d6d;
+  --ansi-1: #e5534b;  --ansi-9: #f07068;
+  --ansi-2: #2fbf3a;  --ansi-10: #4fcf5a;
+  --ansi-3: #e6c13a;  --ansi-11: #f1d357;
+  --ansi-4: #5a78ee;  --ansi-12: #8aa4ff;
+  --ansi-5: #b48cf0;  --ansi-13: #d88aa7;
+  --ansi-6: #4db4b0;  --ansi-14: #6fd0cb;
+  --ansi-7: #d1d1d1;  --ansi-15: #f5f5f5;
 }
 
 /* ---------- Type ---------- */
 body.bb-app-shell {
+  font-weight: 450;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv11";
 }
 
-/* ---------- Chrome: one surface, hairline seams ---------- */
+/* ---------- Chrome: grey sidebar, near-white main, hairline seams ---------- */
 [data-sidebar="panel"] {
-  border-color: var(--fx-ui);
+  border-color: var(--cp-line);
 }
 [data-sidebar-navigation-placement="rail"],
 [data-sidebar="sidebar"] > div > .bg-surface-recessed {
-  background: var(--fx-bg);
+  background: var(--cp-frame);
 }
 [data-split-pane-id] > header {
-  background: var(--fx-bg);
-  border-bottom-color: var(--fx-ui);
+  background: var(--cp-panel);
+  border-bottom-color: var(--cp-line);
 }
 
-/* Selected thread: quiet fill and a thin accent mark, like a bookmark. */
+/* Selected thread: a plain grey fill, as in Capy. */
 [data-sidebar-rename-row].bg-state-active {
-  background: var(--fx-bg-2);
-  box-shadow: inset 2px 0 0 var(--fx-accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
-}
-
-/* Unread divider: the accent, not a stray blue. */
-[data-testid="thread-unread-divider"] {
-  color: var(--fx-accent);
-}
-[data-testid="thread-unread-divider"] .bg-timeline-accent {
-  background: color-mix(in oklab, var(--fx-accent) 45%, transparent);
+  background: var(--cp-selected);
+  border-radius: var(--radius);
 }
 
 /* ---------- Messages ---------- */
-/* User message: plain fill, no border. */
+/* User message: soft grey fill, no border. */
 [data-message-column] .group\/message > div > div:first-child {
-  background: var(--fx-bg-2);
+  background: var(--cp-fill);
   border-color: transparent;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
-/* Inline code: outlined mono chip, same ink as the text. */
+/* Inline code: a quiet grey chip. */
 [data-markdown-preview] :not(pre) > code {
-  background: var(--fx-bg-2);
-  border: 1px solid var(--fx-ui);
-  color: var(--fx-tx);
+  background: var(--cp-active);
+  border: 0;
+  color: var(--cp-text);
   border-radius: 4px;
-  padding: 0 0.3rem;
+  padding: 0.05rem 0.3rem;
   font-size: 0.85em;
 }
 
-/* Links: ink with a faint underline; the underline darkens on hover. */
+/* Links: Capy blue, no underline until hover. */
 [data-markdown-preview] a {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--fx-ui-3);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  color: var(--cp-link);
+  text-decoration: none;
 }
 [data-markdown-preview] a:hover {
-  text-decoration-color: var(--fx-tx-2);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 [data-markdown-preview] a [data-icon="ExternalLink"] {
   display: none;
@@ -298,33 +236,33 @@ body.bb-app-shell {
 [data-markdown-preview] th,
 [data-markdown-preview] td {
   border: 0 !important;
-  border-bottom: 1px solid var(--fx-ui) !important;
+  border-bottom: 1px solid var(--cp-line) !important;
   padding: 0.45rem 0.9rem 0.45rem 0 !important;
   vertical-align: top;
 }
 [data-markdown-preview] th {
   font-weight: 500;
-  color: var(--fx-tx-2);
+  color: var(--cp-text-2);
 }
 [data-markdown-preview] tr:last-child td {
   border-bottom: 0 !important;
 }
 
-/* ---------- Composer: flat box, hairline, no glow ---------- */
+/* ---------- Composer: a white card with a hairline ---------- */
 form[data-promptbox] {
-  border-radius: 10px;
-  border-color: var(--fx-ui-2);
-  background: var(--fx-bg);
+  border-radius: 8px;
+  border-color: var(--cp-line-2);
+  background: var(--cp-card);
   box-shadow: none;
 }
 form[data-promptbox]:focus-within {
-  border-color: var(--fx-ui-3);
+  border-color: var(--cp-line-3);
 }
 
 /* ---------- Scrollbars ---------- */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--fx-ui-2) transparent;
+  scrollbar-color: var(--cp-line-3) transparent;
 }
 
 /* ---------- Sidebar footer status pills: hidden ---------- */
