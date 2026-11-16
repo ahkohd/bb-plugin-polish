@@ -326,3 +326,16 @@ form[data-promptbox]:focus-within {
   scrollbar-width: thin;
   scrollbar-color: var(--fx-ui-2) transparent;
 }
+
+/* ---------- Sidebar footer status pills: hidden ---------- */
+/* The plugin and machine warning triangles and the updates button. Plugin
+   errors and updates stay visible in Settings > Installed plugins, Settings >
+   Machines and Settings > Updates. */
+[data-sidebar="menu-item"]:has(> [data-testid="sidebar-plugin-attention-glyph"]),
+[data-sidebar="menu-item"]:has(> [data-testid="sidebar-machines-attention-badge"]),
+[data-sidebar="menu-item"]:has([data-testid="sidebar-update-button"]),
+[data-testid="sidebar-plugin-attention-glyph"],
+[data-testid="sidebar-machines-attention-badge"],
+[data-testid="sidebar-update-button"] {
+  display: none !important;
+}
