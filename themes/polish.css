@@ -2,15 +2,10 @@
  * Polish: a clean, minimal bb on the Flexoki palette (stephango.com/flexoki).
  *
  * Rules of the look: monochrome ink on paper, hairline borders, no decorative
- * shadows, small radii, and one sparing accent (Flexoki orange). The sidebar
- * sits on the window colour and the main area is a rounded panel beside it.
- *
- * How the tokens work: each mode sets Flexoki "roles" (--fx-bg, --fx-tx, ...).
- * One shared block maps the roles onto bb's tokens. That block is declared on
- * the root and again on the main panel, so the panel can swap in its own
- * surface roles and every bb token inside it follows. Everything lives in
- * this one theme file, so picking another theme in Settings > Appearance
- * undoes all of it.
+ * shadows, small radii, and one sparing accent (Flexoki orange) for the
+ * selected thread and focus. Palette tokens come first; the component rules
+ * after them only remove noise. Everything lives in this one theme file, so
+ * picking another theme in Settings > Appearance undoes all of it.
  */
 
 /* ---------- Flexoki palette ---------- */
@@ -41,133 +36,46 @@
   --fx-magenta-400: #ce5d97;  --fx-magenta-600: #a02f6f;
 }
 
-/* ---------- Roles: light ---------- */
+/* ---------- Light ---------- */
 :root, .light {
-  color-scheme: light;
-  /* Window (sidebar) surface. */
-  --fx-bg: var(--fx-50);
-  --fx-bg-2: var(--fx-100);
-  --fx-ui: var(--fx-150);
-  --fx-ui-2: var(--fx-200);
-  --fx-ui-3: var(--fx-300);
-  /* Main panel surface. */
-  --fx-panel-bg: var(--fx-paper);
-  --fx-panel-bg-2: var(--fx-50);
-  --fx-panel-ui: var(--fx-100);
-  --fx-panel-ui-2: var(--fx-150);
-  --fx-panel-ui-3: var(--fx-200);
-  /* Floating surfaces (menus, dialogs, palette). */
-  --fx-float: var(--fx-paper);
-
-  --fx-tx: var(--fx-black);
+  /* Flexoki roles: bg, bg-2, ui, ui-2, ui-3, tx-3, tx-2, tx */
+  --fx-bg: var(--fx-paper);
+  --fx-bg-2: var(--fx-50);
+  --fx-ui: var(--fx-100);
+  --fx-ui-2: var(--fx-150);
+  --fx-ui-3: var(--fx-200);
+  --fx-tx-3: var(--fx-300);
   --fx-tx-2: var(--fx-600);
-  --fx-tx-3: var(--fx-500);
+  --fx-tx: var(--fx-black);
   --fx-accent: var(--fx-orange-600);
-  --fx-red: var(--fx-red-600);
-  --fx-orange: var(--fx-orange-600);
-  --fx-yellow: var(--fx-yellow-400);
-  --fx-green: var(--fx-green-600);
-  --fx-blue: var(--fx-blue-600);
-  --fx-purple: var(--fx-purple-600);
-  --fx-shadow: rgb(16 15 15 / 0.1);
 
-  --ansi-0: var(--fx-black);       --ansi-8: var(--fx-600);
-  --ansi-1: var(--fx-red-600);     --ansi-9: var(--fx-red-400);
-  --ansi-2: var(--fx-green-600);   --ansi-10: var(--fx-green-400);
-  --ansi-3: var(--fx-yellow-600);  --ansi-11: var(--fx-yellow-400);
-  --ansi-4: var(--fx-blue-600);    --ansi-12: var(--fx-blue-400);
-  --ansi-5: var(--fx-magenta-600); --ansi-13: var(--fx-magenta-400);
-  --ansi-6: var(--fx-cyan-600);    --ansi-14: var(--fx-cyan-400);
-  --ansi-7: var(--fx-200);         --ansi-15: var(--fx-paper);
-}
-
-/* ---------- Roles: dark ---------- */
-.dark {
-  color-scheme: dark;
-  --fx-bg: var(--fx-black);
-  --fx-bg-2: var(--fx-950);
-  --fx-ui: var(--fx-900);
-  --fx-ui-2: var(--fx-850);
-  --fx-ui-3: var(--fx-800);
-  /* The panel is one step lighter than the window, as raised surfaces are
-     in dark interfaces. */
-  --fx-panel-bg: var(--fx-950);
-  --fx-panel-bg-2: var(--fx-900);
-  --fx-panel-ui: var(--fx-850);
-  --fx-panel-ui-2: var(--fx-800);
-  --fx-panel-ui-3: var(--fx-700);
-  --fx-float: var(--fx-950);
-
-  --fx-tx: var(--fx-200);
-  --fx-tx-2: var(--fx-500);
-  --fx-tx-3: var(--fx-600);
-  --fx-accent: var(--fx-orange-400);
-  --fx-red: var(--fx-red-400);
-  --fx-orange: var(--fx-orange-400);
-  --fx-yellow: var(--fx-yellow-400);
-  --fx-green: var(--fx-green-400);
-  --fx-blue: var(--fx-blue-400);
-  --fx-purple: var(--fx-purple-400);
-  --fx-shadow: rgb(0 0 0 / 0.55);
-
-  --ansi-0: var(--fx-black);       --ansi-8: var(--fx-700);
-  --ansi-1: var(--fx-red-400);     --ansi-9: var(--fx-red-400);
-  --ansi-2: var(--fx-green-400);   --ansi-10: var(--fx-green-400);
-  --ansi-3: var(--fx-yellow-400);  --ansi-11: var(--fx-yellow-400);
-  --ansi-4: var(--fx-blue-400);    --ansi-12: var(--fx-blue-400);
-  --ansi-5: var(--fx-magenta-400); --ansi-13: var(--fx-magenta-400);
-  --ansi-6: var(--fx-cyan-400);    --ansi-14: var(--fx-cyan-400);
-  --ansi-7: var(--fx-200);         --ansi-15: var(--fx-paper);
-}
-
-/* The main panel, and anything floating above it (menus, popovers,
-   dialogs), swap in the panel's surface roles. */
-main[data-sidebar="inset"],
-[data-radix-popper-content-wrapper],
-[role="dialog"] {
-  --fx-bg: var(--fx-panel-bg);
-  --fx-bg-2: var(--fx-panel-bg-2);
-  --fx-ui: var(--fx-panel-ui);
-  --fx-ui-2: var(--fx-panel-ui-2);
-  --fx-ui-3: var(--fx-panel-ui-3);
-}
-
-/* ---------- Roles to bb tokens (root, dark root, and the main panel) ---------- */
-:root, .light, .dark,
-main[data-sidebar="inset"],
-[data-radix-popper-content-wrapper],
-[role="dialog"] {
   --canvas: var(--fx-bg);
   --ink: var(--fx-tx);
   --background: var(--fx-bg);
   --foreground: var(--fx-tx);
   --card: var(--fx-bg);
-  --card-foreground: var(--fx-tx);
-  --popover: var(--fx-float);
-  --popover-foreground: var(--fx-tx);
+  --popover: var(--fx-bg);
   --primary: var(--fx-tx);
   --primary-foreground: var(--fx-bg);
   --secondary: var(--fx-bg-2);
-  --secondary-foreground: var(--fx-tx);
   --accent: var(--fx-bg-2);
-  --accent-foreground: var(--fx-tx);
   --muted: var(--fx-bg-2);
   --muted-foreground: var(--fx-tx-2);
-  --subtle-foreground: var(--fx-tx-3);
-  --readback-foreground: var(--fx-tx-2);
-  --timeline-accent: var(--fx-blue);
-  --file-accent: var(--fx-blue);
+  --subtle-foreground: var(--fx-500);
+  --readback-foreground: var(--fx-600);
+  --timeline-accent: var(--fx-blue-600);
+  --file-accent: var(--fx-blue-600);
 
-  --destructive: var(--fx-red);
-  --destructive-text: var(--fx-red);
-  --warning: var(--fx-orange);
-  --warning-text: var(--fx-orange);
-  --attention: var(--fx-yellow);
-  --success: var(--fx-green);
-  --success-foreground: var(--fx-green);
-  --diff-added: var(--fx-green);
-  --diff-removed: var(--fx-red);
-  --pr-merged: var(--fx-purple);
+  --destructive: var(--fx-red-600);
+  --destructive-text: var(--fx-red-600);
+  --warning: var(--fx-orange-400);
+  --warning-text: var(--fx-orange-600);
+  --attention: var(--fx-yellow-400);
+  --success: var(--fx-green-400);
+  --success-foreground: var(--fx-green-600);
+  --diff-added: var(--fx-green-600);
+  --diff-removed: var(--fx-red-600);
+  --pr-merged: var(--fx-purple-600);
 
   --border: var(--fx-ui);
   --border-hairline: var(--fx-ui);
@@ -176,8 +84,8 @@ main[data-sidebar="inset"],
   --input: var(--fx-ui-2);
   --ring: var(--fx-ui-3);
 
-  --state-hover: color-mix(in oklab, var(--fx-tx) 5%, transparent);
-  --state-active: color-mix(in oklab, var(--fx-tx) 8%, transparent);
+  --state-hover: color-mix(in oklab, var(--fx-tx) 4%, transparent);
+  --state-active: color-mix(in oklab, var(--fx-tx) 7%, transparent);
   --surface-recessed: var(--fx-bg-2);
   --surface-recessed-solid: var(--fx-bg-2);
   --surface-recessed-soft-solid: var(--fx-bg-2);
@@ -189,8 +97,6 @@ main[data-sidebar="inset"],
 
   --pill-surface: var(--fx-bg);
   --pill-surface-border: var(--fx-ui);
-  --pill-foreground: var(--fx-tx);
-  --pill-icon: var(--fx-tx);
   --pill-shadow: none;
   --pill-surface-selected: var(--fx-bg-2);
   --pill-surface-selected-border: var(--fx-ui-2);
@@ -208,10 +114,110 @@ main[data-sidebar="inset"],
   --shadow-sm: none;
   --shadow: none;
   --shadow-lift: none;
-  --shadow-md: 0 4px 16px -4px var(--fx-shadow);
-  --shadow-lg: 0 8px 24px -8px var(--fx-shadow);
-  --shadow-xl: 0 12px 32px -10px var(--fx-shadow);
-  --shadow-2xl: 0 16px 40px -12px var(--fx-shadow);
+  --shadow-md: 0 4px 16px -4px rgb(16 15 15 / 0.08);
+  --shadow-lg: 0 8px 24px -8px rgb(16 15 15 / 0.12);
+  --shadow-xl: 0 12px 32px -10px rgb(16 15 15 / 0.14);
+  --shadow-2xl: 0 16px 40px -12px rgb(16 15 15 / 0.16);
+
+  --ansi-0: var(--fx-black);    --ansi-8: var(--fx-600);
+  --ansi-1: var(--fx-red-600);  --ansi-9: var(--fx-red-400);
+  --ansi-2: var(--fx-green-600); --ansi-10: var(--fx-green-400);
+  --ansi-3: var(--fx-yellow-600); --ansi-11: var(--fx-yellow-400);
+  --ansi-4: var(--fx-blue-600); --ansi-12: var(--fx-blue-400);
+  --ansi-5: var(--fx-magenta-600); --ansi-13: var(--fx-magenta-400);
+  --ansi-6: var(--fx-cyan-600); --ansi-14: var(--fx-cyan-400);
+  --ansi-7: var(--fx-200);      --ansi-15: var(--fx-paper);
+}
+
+/* ---------- Dark ---------- */
+.dark {
+  --fx-bg: var(--fx-black);
+  --fx-bg-2: var(--fx-950);
+  --fx-ui: var(--fx-900);
+  --fx-ui-2: var(--fx-850);
+  --fx-ui-3: var(--fx-800);
+  --fx-tx-3: var(--fx-700);
+  --fx-tx-2: var(--fx-500);
+  --fx-tx: var(--fx-200);
+  --fx-accent: var(--fx-orange-400);
+
+  --canvas: var(--fx-bg);
+  --ink: var(--fx-tx);
+  --background: var(--fx-bg);
+  --foreground: var(--fx-tx);
+  --card: var(--fx-bg);
+  --popover: var(--fx-bg-2);
+  --primary: var(--fx-tx);
+  --primary-foreground: var(--fx-bg);
+  --secondary: var(--fx-bg-2);
+  --accent: var(--fx-bg-2);
+  --muted: var(--fx-bg-2);
+  --muted-foreground: var(--fx-tx-2);
+  --subtle-foreground: var(--fx-600);
+  --readback-foreground: var(--fx-500);
+  --timeline-accent: var(--fx-blue-400);
+  --file-accent: var(--fx-blue-400);
+
+  --destructive: var(--fx-red-400);
+  --destructive-text: var(--fx-red-400);
+  --warning: var(--fx-orange-400);
+  --warning-text: var(--fx-orange-400);
+  --attention: var(--fx-yellow-400);
+  --success: var(--fx-green-400);
+  --success-foreground: var(--fx-green-400);
+  --diff-added: var(--fx-green-400);
+  --diff-removed: var(--fx-red-400);
+  --pr-merged: var(--fx-purple-400);
+
+  --border: var(--fx-ui);
+  --border-hairline: var(--fx-ui);
+  --border-seam: var(--fx-ui);
+  --border-seam-vertical: var(--fx-ui);
+  --input: var(--fx-ui-2);
+  --ring: var(--fx-ui-3);
+
+  --state-hover: color-mix(in oklab, var(--fx-tx) 5%, transparent);
+  --state-active: color-mix(in oklab, var(--fx-tx) 8%, transparent);
+  --surface-recessed: var(--fx-bg-2);
+  --surface-recessed-solid: var(--fx-bg-2);
+  --surface-recessed-soft-solid: var(--fx-bg-2);
+  --surface-raised: var(--fx-bg-2);
+  --surface-raised-solid: var(--fx-bg-2);
+  --surface-scrim: var(--fx-bg);
+  --surface-selected: var(--fx-bg-2);
+  --surface-selected-border: var(--fx-ui-2);
+
+  --pill-surface: var(--fx-bg);
+  --pill-surface-border: var(--fx-ui);
+  --pill-shadow: none;
+  --pill-surface-selected: var(--fx-bg-2);
+  --pill-surface-selected-border: var(--fx-ui-2);
+
+  --sidebar: var(--fx-bg);
+  --sidebar-foreground: var(--fx-tx);
+  --sidebar-accent: var(--fx-bg-2);
+  --sidebar-accent-foreground: var(--fx-tx);
+  --sidebar-border: var(--fx-ui);
+  --sidebar-ring: var(--fx-ui-3);
+
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lift: none;
+  --shadow-md: 0 4px 16px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 8px 24px -8px rgb(0 0 0 / 0.6);
+  --shadow-xl: 0 12px 32px -10px rgb(0 0 0 / 0.65);
+  --shadow-2xl: 0 16px 40px -12px rgb(0 0 0 / 0.7);
+
+  --ansi-0: var(--fx-black);    --ansi-8: var(--fx-700);
+  --ansi-1: var(--fx-red-400);  --ansi-9: var(--fx-red-400);
+  --ansi-2: var(--fx-green-400); --ansi-10: var(--fx-green-400);
+  --ansi-3: var(--fx-yellow-400); --ansi-11: var(--fx-yellow-400);
+  --ansi-4: var(--fx-blue-400); --ansi-12: var(--fx-blue-400);
+  --ansi-5: var(--fx-magenta-400); --ansi-13: var(--fx-magenta-400);
+  --ansi-6: var(--fx-cyan-400); --ansi-14: var(--fx-cyan-400);
+  --ansi-7: var(--fx-200);      --ansi-15: var(--fx-paper);
 }
 
 /* ---------- Type ---------- */
@@ -220,33 +226,13 @@ body.bb-app-shell {
   font-feature-settings: "cv11";
 }
 
-/* ---------- Layout: sidebar on the window, main area as a rounded panel ---------- */
-/* bb's desktop app has its own framed layout; this draws the same idea
-   wherever bb uses the flat one (the browser, and narrow windows excepted). */
-@media (min-width: 768px) {
-  [data-testid="app-layout-root"]:not([data-framed]) {
-    background: var(--fx-bg);
-  }
-  [data-testid="app-layout-root"]:not([data-framed]) [data-sidebar="panel"] {
-    border-right-color: transparent;
-  }
-  [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"] {
-    height: calc(100% - 16px);
-    margin: 8px 8px 8px 0;
-    border: 1px solid var(--fx-panel-ui);
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--fx-panel-bg);
-  }
-  .dark [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"] {
-    border-color: var(--fx-900);
-  }
+/* ---------- Chrome: one surface, hairline seams ---------- */
+[data-sidebar="panel"] {
+  border-color: var(--fx-ui);
 }
-
-/* ---------- Chrome ---------- */
 [data-sidebar-navigation-placement="rail"],
 [data-sidebar="sidebar"] > div > .bg-surface-recessed {
-  background: transparent;
+  background: var(--fx-bg);
 }
 [data-split-pane-id] > header {
   background: var(--fx-bg);
