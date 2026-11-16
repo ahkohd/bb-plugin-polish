@@ -1,0 +1,225 @@
+/*
+ * Polish: a calmer, warmer look for bb.
+ * Palette tokens first, then a small set of component refinements that hang
+ * off stable data attributes. Everything lives in this one theme file, so
+ * switching to another theme in Settings > Appearance undoes all of it.
+ */
+
+/* ---------- Palette: light ---------- */
+:root, .light {
+  --canvas: oklch(0.992 0.003 85);
+  --ink: oklch(0.27 0.012 265);
+  --primary: oklch(0.52 0.17 272);
+  --primary-foreground: oklch(0.99 0.004 85);
+  --muted-foreground: oklch(0.47 0.012 265);
+  --subtle-foreground: oklch(0.55 0.01 265);
+  --readback-foreground: oklch(0.5 0.012 265);
+  --timeline-accent: oklch(0.55 0.15 272);
+  --file-accent: var(--timeline-accent);
+  --accent: color-mix(in oklab, var(--primary) 7%, var(--canvas));
+  --secondary: color-mix(in oklch, var(--ink) 6%, var(--canvas));
+  --muted: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+  --border: color-mix(in oklch, var(--ink) 11%, var(--canvas));
+  --border-hairline: color-mix(in oklch, var(--ink) 10%, var(--canvas));
+  --border-seam: color-mix(in oklch, var(--ink) 7.5%, var(--canvas));
+  --input: color-mix(in oklch, var(--ink) 22%, var(--canvas));
+  --surface-recessed: color-mix(in oklab, var(--ink) 4.5%, transparent);
+  --surface-raised-solid: oklch(1 0 0);
+  --surface-selected: color-mix(in oklab, var(--primary) 11%, transparent);
+  --surface-selected-border: color-mix(in oklab, var(--primary) 28%, transparent);
+  --state-hover: color-mix(in oklab, var(--ink) 4.5%, transparent);
+  --state-active: color-mix(in oklab, var(--ink) 9%, transparent);
+  --sidebar: oklch(0.975 0.005 85);
+  --sidebar-accent: color-mix(in oklch, var(--ink) 5%, var(--sidebar));
+  --polish-selected: color-mix(in oklab, var(--primary) 10%, var(--sidebar));
+  --sidebar-border: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+  --success: oklch(0.68 0.14 158);
+  --success-foreground: oklch(0.5 0.12 158);
+  --attention: oklch(0.78 0.14 78);
+  --polish-code-ink: oklch(0.4 0.07 285);
+  --polish-code-bg: color-mix(in oklab, var(--primary) 6%, var(--canvas));
+  --polish-glow: color-mix(in oklab, var(--primary) 12%, transparent);
+  --radius: 0.625rem;
+  --shadow-xs: 0 1px 2px oklch(0.25 0.02 265 / 0.05);
+  --shadow-sm: 0 1px 2px oklch(0.25 0.02 265 / 0.06), 0 1px 1px oklch(0.25 0.02 265 / 0.03);
+  --shadow: 0 1px 3px oklch(0.25 0.02 265 / 0.07), 0 1px 2px oklch(0.25 0.02 265 / 0.04);
+  --shadow-md: 0 4px 12px -2px oklch(0.25 0.02 265 / 0.08), 0 2px 4px -2px oklch(0.25 0.02 265 / 0.05);
+  --shadow-lg: 0 12px 28px -6px oklch(0.25 0.02 265 / 0.12), 0 4px 8px -4px oklch(0.25 0.02 265 / 0.06);
+  --shadow-xl: 0 20px 44px -10px oklch(0.25 0.02 265 / 0.16);
+  --shadow-lift: 0 10px 30px -12px oklch(0.25 0.02 265 / 0.18), 0 2px 6px -2px oklch(0.25 0.02 265 / 0.06);
+}
+
+/* ---------- Palette: dark ---------- */
+.dark {
+  --canvas: oklch(0.185 0.008 265);
+  --ink: oklch(0.93 0.006 265);
+  --primary: oklch(0.74 0.12 275);
+  --primary-foreground: oklch(0.18 0.01 265);
+  --muted-foreground: oklch(0.72 0.01 265);
+  --subtle-foreground: oklch(0.63 0.01 265);
+  --readback-foreground: oklch(0.67 0.01 265);
+  --timeline-accent: oklch(0.74 0.12 275);
+  --file-accent: var(--timeline-accent);
+  --accent: color-mix(in oklch, var(--primary) 10%, var(--canvas));
+  --secondary: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+  --muted: color-mix(in oklch, var(--ink) 10%, var(--canvas));
+  --border: color-mix(in oklch, var(--ink) 12%, var(--canvas));
+  --border-hairline: color-mix(in oklch, var(--ink) 11%, var(--canvas));
+  --border-seam: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+  --input: color-mix(in oklch, var(--ink) 20%, var(--canvas));
+  --surface-recessed: color-mix(in oklab, var(--ink) 5.5%, transparent);
+  --surface-raised-solid: oklch(0.215 0.009 265);
+  --surface-selected: color-mix(in oklab, var(--primary) 16%, transparent);
+  --surface-selected-border: color-mix(in oklab, var(--primary) 32%, transparent);
+  --state-hover: color-mix(in oklab, var(--ink) 6%, transparent);
+  --state-active: color-mix(in oklab, var(--ink) 11%, transparent);
+  --sidebar: oklch(0.165 0.008 265);
+  --sidebar-accent: color-mix(in oklch, var(--ink) 6%, var(--sidebar));
+  --polish-selected: color-mix(in oklab, var(--primary) 16%, var(--sidebar));
+  --sidebar-border: color-mix(in oklch, var(--ink) 7%, var(--canvas));
+  --success: oklch(0.74 0.13 158);
+  --success-foreground: oklch(0.76 0.13 158);
+  --attention: oklch(0.82 0.13 80);
+  --polish-code-ink: oklch(0.86 0.05 285);
+  --polish-code-bg: color-mix(in oklch, var(--primary) 9%, var(--canvas));
+  --polish-glow: color-mix(in oklab, var(--primary) 16%, transparent);
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.35);
+  --shadow: 0 1px 3px oklch(0 0 0 / 0.4);
+  --shadow-md: 0 6px 16px -4px oklch(0 0 0 / 0.45);
+  --shadow-lg: 0 14px 32px -8px oklch(0 0 0 / 0.55);
+  --shadow-xl: 0 22px 48px -12px oklch(0 0 0 / 0.6);
+  --shadow-lift: 0 12px 32px -12px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(1 0 0 / 0.04);
+}
+
+/* ---------- Type ---------- */
+body.bb-app-shell {
+  font-feature-settings: "cv11", "ss01", "ss03";
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Sidebar ---------- */
+[data-sidebar="panel"] {
+  border-color: var(--sidebar-border);
+}
+[data-sidebar-thread-id] {
+  border-radius: 8px;
+}
+[data-sidebar-rename-row].bg-state-active {
+  background: var(--polish-selected);
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+[data-sidebar-rename-row].bg-state-active [data-sidebar-drag-title],
+[data-sidebar-rename-row].bg-state-active {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ---------- Page header ---------- */
+[data-split-pane-id] > header {
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+}
+
+/* ---------- Messages ---------- */
+[data-message-column] .group\/message > div > div:first-child {
+  background: color-mix(in oklab, var(--primary) 7%, var(--canvas));
+  border-color: color-mix(in oklab, var(--primary) 16%, transparent);
+  border-radius: 16px 16px 6px 16px;
+  padding: 0.7rem 1rem;
+}
+
+[data-markdown-preview] {
+  line-height: 1.65;
+}
+[data-markdown-preview] h1,
+[data-markdown-preview] h2,
+[data-markdown-preview] h3 {
+  letter-spacing: -0.018em;
+  line-height: 1.3;
+}
+[data-markdown-preview] h1 { font-size: 1.2rem; margin-top: 1.25rem; }
+[data-markdown-preview] h2 { font-size: 1.02rem; margin-top: 1.4rem; }
+[data-markdown-preview] h3 { font-size: 0.94rem; margin-top: 1.1rem; }
+
+/* Inline code: quiet tinted chip instead of a grey block. */
+[data-markdown-preview] :not(pre) > code {
+  background: var(--polish-code-bg);
+  color: var(--polish-code-ink);
+  border-radius: 5px;
+  padding: 0.08rem 0.36rem;
+  font-size: 0.86em;
+  font-weight: 500;
+}
+
+/* Links: accent, underline only on hover; dim the external-link glyph. */
+[data-markdown-preview] a {
+  color: var(--primary);
+  text-decoration-color: color-mix(in oklab, var(--primary) 0%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 120ms ease;
+}
+[data-markdown-preview] a:hover {
+  text-decoration-color: color-mix(in oklab, var(--primary) 60%, transparent);
+}
+[data-markdown-preview] a [data-icon="ExternalLink"] {
+  opacity: 0.45;
+}
+
+/* Tables: one rounded frame, horizontal rules only. */
+[data-markdown-preview] table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.8125rem;
+}
+[data-markdown-preview] th,
+[data-markdown-preview] td {
+  border: 0 !important;
+  border-bottom: 1px solid var(--border-seam) !important;
+  padding: 0.5rem 0.75rem !important;
+  vertical-align: top;
+}
+[data-markdown-preview] tr:last-child td {
+  border-bottom: 0 !important;
+}
+[data-markdown-preview] thead {
+  background: var(--surface-recessed);
+}
+[data-markdown-preview] th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+}
+[data-markdown-preview] tbody tr:hover td {
+  background: var(--state-hover);
+}
+
+/* ---------- Composer ---------- */
+form[data-promptbox] {
+  border-radius: 18px;
+  border-color: var(--border);
+  background: var(--surface-raised-solid);
+  box-shadow: var(--shadow-lift);
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+form[data-promptbox]:focus-within {
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  box-shadow: var(--shadow-lift), 0 0 0 3px var(--polish-glow);
+}
+
+/* ---------- Scrollbars ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--ink) 18%, transparent) transparent;
+}
+
+/* ---------- Diagrams ---------- */
+[data-markdown-preview] svg[id^="mermaid"] {
+  border-radius: 10px;
+}
