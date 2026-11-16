@@ -230,7 +230,8 @@ body.bb-app-shell {
 [data-sidebar="panel"] {
   border-color: var(--fx-ui);
 }
-[data-sidebar-navigation-placement="rail"] {
+[data-sidebar-navigation-placement="rail"],
+[data-sidebar="sidebar"] > div > .bg-surface-recessed {
   background: var(--fx-bg);
 }
 [data-split-pane-id] > header {
@@ -243,6 +244,14 @@ body.bb-app-shell {
   background: var(--fx-bg-2);
   box-shadow: inset 2px 0 0 var(--fx-accent);
   border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* Unread divider: the accent, not a stray blue. */
+[data-testid="thread-unread-divider"] {
+  color: var(--fx-accent);
+}
+[data-testid="thread-unread-divider"] .bg-timeline-accent {
+  background: color-mix(in oklab, var(--fx-accent) 45%, transparent);
 }
 
 /* ---------- Messages ---------- */
