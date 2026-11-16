@@ -8,7 +8,7 @@
   },
   "bb": {
     "name": "Polish [Experimental]",
-    "description": "A calmer, warmer look for bb: softer surfaces, a tinted sidebar, rounded tables and a raised composer. Turn it on in Settings, Appearance.",
+    "description": "A clean, minimal look for bb on Steph Ango's Flexoki palette: ink on paper, hairline borders, no decorative shadows, and one sparing accent. Code blocks use the Flexoki code theme.",
     "branding": {
       "icon": "Sparkles"
     },
@@ -17,9 +17,13 @@
     "themes": [
       {
         "id": "polish",
-        "name": "Polish",
-        "description": "Warm paper light, graphite dark, indigo accent",
-        "css": "./themes/polish.css"
+        "name": "Polish (Flexoki)",
+        "description": "Clean and minimal, on the Flexoki palette",
+        "css": "./themes/polish.css",
+        "codeTheme": {
+          "light": "./themes/code/flexoki-light.json",
+          "dark": "./themes/code/flexoki-dark.json"
+        }
       }
     ]
   },
@@ -29,5 +33,5 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
   },
-  "description": "A calmer, warmer look for bb."
+  "description": "A clean, minimal bb on the Flexoki palette."
 }
