@@ -679,3 +679,113 @@
     transition: none;
   }
 }
+
+/* ---------- Settings sections ---------- */
+.pl-settings {
+  gap: 1.5rem;
+}
+.pl-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pl-settings-heading {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.pl-settings-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+.pl-settings-card > .pl-field {
+  padding: 0.75rem 0.9rem;
+}
+.pl-settings-card > .pl-field + .pl-field {
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- Status line ---------- */
+.pl-statusbar {
+  position: fixed;
+  right: 14px;
+  bottom: 0;
+  z-index: 40;
+  /* Shown by the Polish theme, which makes the gutter it sits in. */
+  display: none;
+  height: 26px;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.6875rem;
+  color: var(--subtle-foreground);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+.pl-statusbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.pl-statusbar-item:hover {
+  color: var(--foreground);
+}
+.pl-statusbar-item > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.pl-statusbar-item > span[data-zero] {
+  opacity: 0.5;
+}
+.pl-statusbar .pl-dot {
+  width: 5px;
+  height: 5px;
+}
+.pl-statusbar-item > span[data-zero] > .pl-dot {
+  background: var(--subtle-foreground);
+}
+
+/* ---------- Zen ---------- */
+.pl-zen-exit {
+  position: fixed;
+  right: 18px;
+  bottom: 14px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 26px;
+  padding: 0 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 0.6875rem;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+.pl-zen-exit:hover,
+.pl-zen-exit:focus-visible {
+  opacity: 1;
+}
+.pl-zen-exit kbd {
+  font: inherit;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  background: var(--state-active);
+}
+html[data-polish-zen] .pl-island {
+  display: none;
+}

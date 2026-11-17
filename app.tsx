@@ -10,15 +10,19 @@ import { OVERVIEW_PATH, registerOverview } from "./src/features/overview";
 import { bridge, currentThreadId, NeedsYouIsland } from "./src/Island";
 import { nextNeedingYou } from "./src/model";
 import { PolishSettings } from "./src/Settings";
+import { StatusBar } from "./src/StatusBar";
 import {
   ACCENTS,
+  BACKDROPS,
   DENSITIES,
   LAYOUTS,
   PALETTES,
   applyPrefs,
   clearPrefs,
   cycle,
+  isZen,
   readPrefs,
+  setZen,
   subscribePrefs,
   writePrefs,
 } from "./src/prefs";
@@ -46,6 +50,22 @@ export default definePluginApp((app) => {
   });
 
   app.slots.experimental_appOverlay({ id: "needs-you", component: NeedsYouIsland });
+  app.slots.experimental_appOverlay({ id: "status", component: StatusBar });
+
+  app.commands.register({
+    id: "zen",
+    title: "Polish: Toggle zen mode",
+    defaultShortcut: { key: "z", mod: true, alt: true },
+    run: () => setZen(!isZen()),
+  });
+  app.commands.register({
+    id: "cycle-backdrop",
+    title: "Polish: Next backdrop",
+    run: () => {
+      const prefs = readPrefs();
+      writePrefs({ ...prefs, backdrop: cycle(BACKDROPS, prefs.backdrop) });
+    },
+  });
 
   app.commands.register({
     id: "next-needs-you",

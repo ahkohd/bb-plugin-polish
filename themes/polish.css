@@ -8,10 +8,10 @@
  * and focus. Palette values are Capy's own app tokens.
  *
  * Variants come from <html> attributes that Polish's content script sets
- * from Settings > Polish: data-polish-layout (inset | flat),
- * data-polish-density (comfortable | compact) and data-polish-accent
- * (blue | graphite | violet | green | orange). Without them the defaults
- * apply: inset, comfortable, blue.
+ * from Settings > Polish (see src/prefs.ts): data-polish-palette, -layout,
+ * -panels, -density, -accent, -backdrop, -font, -headings, -reading and
+ * -statusbar, plus data-polish-zen while zen mode is on. Without them the
+ * defaults apply.
  *
  * Everything lives in this one theme file, so picking another theme in
  * Settings > Appearance undoes all of it.
@@ -242,28 +242,157 @@ body.bb-app-shell {
 
 /* ---------- Layout: grey window, main area on a rounded panel ---------- */
 /* bb's desktop app draws its own window frame; this applies to the browser
-   layout on windows 768px and wider. Settings > Polish > Layout > Flat
-   turns it off. */
+   layout on windows 768px and wider. Settings > Polish > Main area > Flat
+   turns it off. --pl-gutter is the space around the panels; the status line
+   lives in a taller bottom gutter. */
+html {
+  --pl-gutter: 8px;
+  --pl-gutter-bottom: 8px;
+  --pl-panel-radius: 12px;
+}
+html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]):not([data-polish-zen]) {
+  --pl-gutter-bottom: 26px;
+}
 @media (min-width: 768px) {
   html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) {
-    background: var(--cp-frame);
+    background: var(--pl-backdrop, var(--cp-frame));
   }
   html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) [data-sidebar="panel"] {
     border-right-color: transparent;
   }
   html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"] {
-    height: calc(100% - 16px);
-    margin: 8px 8px 8px 0;
+    height: calc(100% - var(--pl-gutter) - var(--pl-gutter-bottom));
+    margin: var(--pl-gutter) var(--pl-gutter) var(--pl-gutter-bottom) 0;
     border: 1px solid var(--cp-line);
-    border-radius: 12px;
+    border-radius: var(--pl-panel-radius);
     overflow: hidden;
     background: var(--cp-panel);
     box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
   }
   html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) > .peer[data-state="collapsed"] ~ main[data-sidebar="inset"] {
-    margin-left: 8px;
+    margin-left: var(--pl-gutter);
+  }
+
+  /* Cards: the thread and its side panel are separate rounded cards with the
+     window showing between them, instead of one surface with a seam. */
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"]:has([data-panel] > aside[data-surface-tone="sidebar"]) {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"]:has([data-panel] > aside[data-surface-tone="sidebar"]) [data-panel] > [data-split-pane-id] {
+    border: 1px solid var(--cp-line);
+    border-radius: var(--pl-panel-radius);
+    overflow: hidden;
+    background: var(--cp-panel);
+  }
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel] > aside[data-surface-tone="sidebar"] {
+    border-left: var(--pl-gutter) solid transparent;
+    background: transparent;
+  }
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel] > aside[data-surface-tone="sidebar"] > div {
+    border: 1px solid var(--cp-line);
+    border-radius: var(--pl-panel-radius);
+    overflow: hidden;
+    background: var(--cp-panel);
+  }
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel] > aside[data-surface-tone="sidebar"] .bg-sidebar {
+    background: transparent;
   }
 }
+
+/* ---------- Status line and the needs-you pill in the bottom gutter ---------- */
+@media (min-width: 768px) {
+  html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]):not([data-polish-zen]) .pl-statusbar {
+    display: flex;
+  }
+  html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]) .pl-island {
+    top: auto;
+    bottom: 2px;
+    flex-direction: column-reverse;
+  }
+  html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]) .pl-island-pill {
+    height: 22px;
+    padding: 0 0.7rem 0 0.55rem;
+    font-size: 0.6875rem;
+    box-shadow: none;
+  }
+  html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]) .pl-island-pill:hover {
+    transform: translateY(-1px);
+  }
+  html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]) .pl-island-pulse {
+    width: 6px;
+    height: 6px;
+  }
+  html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]) .pl-island-list {
+    margin-top: 0;
+    margin-bottom: 6px;
+  }
+}
+
+/* ---------- Backdrop: what shows around the panels ---------- */
+html[data-polish-backdrop="glow"] {
+  --pl-backdrop:
+    radial-gradient(900px 520px at 0% 0%, color-mix(in oklab, var(--pl-accent) 16%, transparent), transparent 70%),
+    radial-gradient(700px 420px at 100% 100%, color-mix(in oklab, var(--pl-accent) 9%, transparent), transparent 70%),
+    var(--cp-frame);
+}
+html[data-polish-backdrop="aurora"] {
+  --pl-backdrop:
+    radial-gradient(820px 480px at 2% 4%, color-mix(in oklab, var(--pl-accent) 20%, transparent), transparent 70%),
+    radial-gradient(760px 460px at 34% 104%, rgb(46 196 182 / 0.13), transparent 70%),
+    radial-gradient(820px 520px at 100% 0%, rgb(155 93 229 / 0.12), transparent 70%),
+    var(--cp-frame);
+}
+html[data-polish-backdrop="grain"] {
+  --pl-backdrop:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    var(--cp-frame);
+}
+/* The sidebar lets the backdrop through. */
+html:not([data-polish-backdrop="none"]):not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) :is([data-sidebar="sidebar"], [data-sidebar="panel"], [data-sidebar="content"], [data-sidebar="header"], [data-sidebar="footer"], [data-sidebar-navigation-placement="rail"], [data-sidebar="sidebar"] > div > .bg-surface-recessed) {
+  background: transparent;
+}
+
+/* ---------- Zen: the thread alone ---------- */
+html[data-polish-zen] [data-testid="app-layout-root"] > .peer,
+html[data-polish-zen] [data-panel]:has(> aside[data-surface-tone="sidebar"]) {
+  display: none !important;
+}
+html[data-polish-zen] [data-panel]:has(> [data-split-pane-id]) {
+  flex: 1 1 100% !important;
+}
+html[data-polish-zen] [data-testid="app-layout-root"] > main[data-sidebar="inset"] {
+  margin-left: var(--pl-gutter);
+}
+/* The floating sidebar toggle would sit on the title. */
+html[data-polish-zen] [data-testid="app-layout-root"] > div.fixed {
+  display: none;
+}
+
+/* ---------- Text options ---------- */
+html[data-polish-font="system"] {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+html[data-polish-reading="14"] [data-markdown-preview] {
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+html[data-polish-reading="15"] [data-markdown-preview] {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+html[data-polish-headings="serif"] [data-markdown-preview] :is(h1, h2, h3),
+html[data-polish-headings="serif"] .pl-hero-title {
+  font-family: ui-serif, "New York", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+html[data-polish-headings="serif"] [data-markdown-preview] h1 { font-size: 1.5rem; }
+html[data-polish-headings="serif"] [data-markdown-preview] h2 { font-size: 1.25rem; }
+html[data-polish-headings="serif"] [data-markdown-preview] h3 { font-size: 1.0625rem; }
+html[data-polish-headings="serif"] .pl-hero-title { font-size: 1.75rem; }
 
 /* ---------- Chrome ---------- */
 [data-sidebar="panel"] {

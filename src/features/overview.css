@@ -51,3 +51,7 @@
 .pl-overview-nothing { padding:10px; color:var(--subtle-foreground); font-size:12px; }
 @media(max-width:1100px) { .pl-overview-toolbar { flex-wrap:wrap; gap:16px; } }
 @media(max-width:650px) { .pl-overview-top { padding:20px 16px 16px; } .pl-overview-body { padding:0 16px 16px; } .pl-overview-actions { flex-wrap:wrap; } .pl-overview-search { width:180px; } }
+/* Board columns are as tall as their cards, not the page. */
+.pl-overview[data-view="board"] .pl-overview-groups { align-items:start; }
+.pl-overview[data-view="board"] .pl-overview-group { max-height:100%; }
+.pl-overview-card { gap:8px; }
