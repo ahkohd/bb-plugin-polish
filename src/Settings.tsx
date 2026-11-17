@@ -1,5 +1,7 @@
 // Polish's settings, saved on this device: look, layout, text and attention.
 import type { ReactNode } from "react";
+import { SetIcon } from "./icons/register";
+import { ICON_SETS as GLYPHS } from "./icons/sets";
 import {
   ACCENTS,
   type Accent,
@@ -7,6 +9,8 @@ import {
   type Density,
   type Font,
   type Headings,
+  type Icons,
+  type IconWeight,
   type Layout,
   type Palette,
   type Panels,
@@ -98,8 +102,29 @@ const ACCENT_NAMES: Record<Accent, string> = {
   orange: "Orange",
 };
 
+const ICON_SET_OPTIONS: readonly { value: Icons; label: string }[] = [
+  { value: "lucide", label: "Lucide" },
+  { value: "phosphor", label: "Phosphor" },
+  { value: "bb", label: "BB" },
+];
+
+const ICON_WEIGHT_OPTIONS: readonly { value: IconWeight; label: string }[] = [
+  { value: "thin", label: "Thin" },
+  { value: "regular", label: "Regular" },
+  { value: "bold", label: "Bold" },
+];
+
+const PREVIEW_ICONS = ["MessageSquarePlus", "Search", "GitBranch", "Folder", "Settings", "Archive", "Clock", "MoreHorizontal"];
+
 export function PolishSettings() {
   const [prefs, update] = usePrefs();
+  // BB reads icon registrations when Polish loads, so moving to or from BB's
+  // own icons takes a reload. Lucide, Phosphor and weights change live.
+  const chooseIcons = (icons: Icons) => {
+    const reload = (icons === "bb") !== (prefs.icons === "bb");
+    update({ icons });
+    if (reload) window.location.reload();
+  };
   return (
     <div className="pl-settings">
       <Section title="Look">
@@ -150,6 +175,27 @@ export function PolishSettings() {
             onChange={(backdrop) => update({ backdrop })}
           />
         </Field>
+      </Section>
+
+      <Section title="Icons">
+        <Field label="Icon set" hint="Whose icons BB draws, everywhere: the sidebar, headers, menus and the composer. Switching to or from BB's own reloads the window.">
+          <Segmented<Icons> label="Icon set" value={prefs.icons} options={ICON_SET_OPTIONS} onChange={chooseIcons} />
+        </Field>
+        <Field label="Line weight" hint="How heavy every icon's lines are, BB's own included.">
+          <Segmented<IconWeight>
+            label="Line weight"
+            value={prefs.iconWeight}
+            options={ICON_WEIGHT_OPTIONS}
+            onChange={(iconWeight) => update({ iconWeight })}
+          />
+        </Field>
+        {prefs.icons === "bb" ? null : (
+          <div className="pl-icon-preview" aria-hidden="true">
+            {PREVIEW_ICONS.map((name) => (
+              <SetIcon key={name} name={name} icon={GLYPHS[name]!} className="pl-icon-preview-glyph" />
+            ))}
+          </div>
+        )}
       </Section>
 
       <Section title="Layout">

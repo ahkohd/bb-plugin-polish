@@ -413,6 +413,22 @@ html[data-polish-zen] [data-testid="app-layout-root"] > div.fixed {
   display: none;
 }
 
+/* ---------- Icon weight ----------
+   BB's own icons draw their lines with a stroke-width attribute, which CSS
+   outranks. Polish's sets take the weight as a prop, so this reaches only the
+   icons BB still draws itself. */
+html[data-polish-icon-weight="thin"] svg[data-icon-root] [stroke-width] {
+  stroke-width: 1.2;
+}
+html[data-polish-icon-weight="bold"] svg[data-icon-root] [stroke-width] {
+  stroke-width: 2;
+}
+/* BB's icons never shrink in a tight row; Polish's should not either. */
+html[data-polish-icons="lucide"] svg[data-polish-icon="lucide"],
+html[data-polish-icons="phosphor"] svg[data-polish-icon="phosphor"] {
+  flex-shrink: 0;
+}
+
 /* ---------- Text options ---------- */
 html[data-polish-font="system"] {
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;

@@ -1,6 +1,8 @@
 // The Overview page: every thread that needs you, is working, is ready for
 // review or ran recently, in Capy's grouped style, and the badge on its
 // navigation item.
+import { usePrefs } from "../prefs";
+import { EXTRA_ICONS, SetIcon } from "../icons/register";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ThreadChat,
@@ -173,6 +175,10 @@ function greeting(now: number): string {
 }
 
 function OverviewIcon({ className }: { className?: string }) {
+  const [prefs] = usePrefs();
+  if (prefs.icons !== "bb") {
+    return <SetIcon name="polish.overview" icon={EXTRA_ICONS["polish.overview"]!} className={className} />;
+  }
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="3.5" y="4" width="17" height="4.5" rx="1.5" />

@@ -16,6 +16,10 @@ Switch back with `bb theme reset`.
 - Backdrops behind the sidebar: plain, glow, aurora or grain.
 - Inter or your system font, sans or serif headings, and a 13, 14 or 15px
   transcript.
+- Icons: Lucide (the default) or Phosphor in place of BB's own, everywhere BB
+  draws an icon, or BB's own; thin, regular or bold lines for any of them.
+  The map from BB's icon names is `src/icons/map.json`; run
+  `python3 scripts/icons.py` after editing it.
 - Calm menus, palette and dialogs; plain tables; rounded code blocks with
   neutral colours.
 - The sidebar footer's warning and update pills are hidden. Plugin errors,
@@ -62,7 +66,8 @@ All are in Settings, Keyboard, where you can rebind them.
 
 ## Settings
 
-Settings, Polish: look (palette, accent, backdrop), layout (main area, side
+Settings, Polish: look (palette, accent, backdrop), icons (set and line
+weight), layout (main area, side
 panel, density, status line), text (font, headings, reading size) and
 attention (needs-you pill). They are saved per device. Settings, Polish,
 Sidebar holds the sidebar's decision mode, which can let a model keep routine

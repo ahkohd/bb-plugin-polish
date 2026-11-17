@@ -1,5 +1,7 @@
 // The Crew tab beside a thread: every thread it started, nested, with what
 // each one is doing, like Capy's Captain view.
+import { usePrefs } from "../prefs";
+import { EXTRA_ICONS, SetIcon } from "../icons/register";
 import { useEffect, useState, useMemo } from "react";
 import {
   useBbNavigate,
@@ -83,6 +85,10 @@ export function CrewTab({ threadId }: ExperimentalThreadTabProps) {
 }
 
 function CrewIcon({ className }: { className?: string }) {
+  const [prefs] = usePrefs();
+  if (prefs.icons !== "bb") {
+    return <SetIcon name="polish.crew" icon={EXTRA_ICONS["polish.crew"]!} className={className} />;
+  }
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="6" cy="5.5" r="2" />

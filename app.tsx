@@ -7,6 +7,7 @@ import { registerCrew } from "./src/features/crew";
 import { registerHome } from "./src/features/home";
 import { registerNav } from "./src/features/nav";
 import { OVERVIEW_PATH, registerOverview } from "./src/features/overview";
+import { registerIcons } from "./src/icons/register";
 import { registerSidebar } from "./src/sidebar/register";
 import { bridge, currentThreadId, NeedsYouIsland } from "./src/Island";
 import { nextNeedingYou } from "./src/model";
@@ -30,6 +31,7 @@ import {
 import "./app.css";
 
 export default definePluginApp((app) => {
+  registerIcons(app);
   registerOverview(app);
   registerHome(app);
   registerCrew(app);

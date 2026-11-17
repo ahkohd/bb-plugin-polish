@@ -708,6 +708,18 @@
 .pl-settings-card > .pl-field + .pl-field {
   border-top: 1px solid var(--border);
 }
+.pl-icon-preview {
+  display: flex;
+  gap: 1.1rem;
+  align-items: center;
+  padding: 0.8rem 0.9rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+.pl-icon-preview-glyph {
+  width: 18px;
+  height: 18px;
+}
 
 /* ---------- Status line ---------- */
 .pl-statusbar {

@@ -12,6 +12,8 @@ export type Panels = "cards" | "joined";
 export type Font = "inter" | "system";
 export type Headings = "sans" | "serif";
 export type Reading = "13" | "14" | "15";
+export type Icons = "bb" | "lucide" | "phosphor";
+export type IconWeight = "thin" | "regular" | "bold";
 
 export interface PolishPrefs {
   palette: Palette;
@@ -30,6 +32,10 @@ export interface PolishPrefs {
   reading: Reading;
   /** The status line under the main area (inset layout). */
   statusbar: boolean;
+  /** Whose icons BB draws: its own, Lucide's or Phosphor's. */
+  icons: Icons;
+  /** Line weight for every icon set. */
+  iconWeight: IconWeight;
 }
 
 export const DEFAULT_PREFS: PolishPrefs = {
@@ -44,6 +50,8 @@ export const DEFAULT_PREFS: PolishPrefs = {
   headings: "sans",
   reading: "13",
   statusbar: true,
+  icons: "lucide",
+  iconWeight: "regular",
 };
 
 export const PALETTES: readonly Palette[] = ["capy", "conductor", "amp", "flexoki"];
@@ -55,6 +63,8 @@ export const PANELS: readonly Panels[] = ["cards", "joined"];
 export const FONTS: readonly Font[] = ["inter", "system"];
 export const HEADINGS: readonly Headings[] = ["sans", "serif"];
 export const READINGS: readonly Reading[] = ["13", "14", "15"];
+export const ICON_SETS: readonly Icons[] = ["bb", "lucide", "phosphor"];
+export const ICON_WEIGHTS: readonly IconWeight[] = ["thin", "regular", "bold"];
 
 const STORAGE_KEY = "polish.prefs.v1";
 const CHANGE_EVENT = "polish:prefs";
@@ -88,6 +98,8 @@ export function parsePrefs(raw: string | null): PolishPrefs {
     headings: pick(record.headings, HEADINGS, DEFAULT_PREFS.headings),
     reading: pick(record.reading, READINGS, DEFAULT_PREFS.reading),
     statusbar: typeof record.statusbar === "boolean" ? record.statusbar : DEFAULT_PREFS.statusbar,
+    icons: pick(record.icons, ICON_SETS, DEFAULT_PREFS.icons),
+    iconWeight: pick(record.iconWeight, ICON_WEIGHTS, DEFAULT_PREFS.iconWeight),
   };
 }
 
@@ -149,6 +161,8 @@ const ATTRIBUTES = {
   headings: "data-polish-headings",
   reading: "data-polish-reading",
   statusbar: "data-polish-statusbar",
+  icons: "data-polish-icons",
+  iconWeight: "data-polish-icon-weight",
 } as const;
 
 /** Set by the zen command, not saved. */
@@ -186,6 +200,8 @@ export function applyPrefs(prefs: PolishPrefs, root: HTMLElement): void {
   root.setAttribute(ATTRIBUTES.headings, prefs.headings);
   root.setAttribute(ATTRIBUTES.reading, prefs.reading);
   root.setAttribute(ATTRIBUTES.statusbar, prefs.statusbar ? "on" : "off");
+  root.setAttribute(ATTRIBUTES.icons, prefs.icons);
+  root.setAttribute(ATTRIBUTES.iconWeight, prefs.iconWeight);
 }
 
 export function clearPrefs(root: HTMLElement): void {
