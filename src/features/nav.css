@@ -32,3 +32,7 @@
 @media (prefers-reduced-motion: reduce) { .pl-nav button:active:not(:disabled) { transform: none; } }
 .pl-nav-badge[data-tone="warning"] { color: var(--foreground); }
 @media (prefers-color-scheme: dark) { .pl-nav-badge[data-tone="warning"] { color: var(--background); } }
+.pl-nav:has(.pl-nav-menu) .pl-nav-tooltip { display: none; }
+@media (prefers-color-scheme: dark) {
+  .pl-nav-tooltip { background: var(--card); color: var(--foreground); box-shadow: var(--shadow-lg); }
+}
