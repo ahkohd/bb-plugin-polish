@@ -1,31 +1,22 @@
 // The status line: a quiet row in the gutter under the main area with what is
-// running, what is unread and the time. Threads that need you show in the
+// running and what is unread; a count of zero is left out, and with nothing
+// to say the line and its gutter go away. Threads that need you show in the
 // needs-you pill beside it, or here when the pill is off. Also the way out of
 // zen mode.
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   experimental_useSidebarThreads as useSidebarThreads,
   useBbNavigate,
 } from "@get-bb/plugin-sdk/app";
+import { useGutterClaim } from "./gutter";
 import { isBusy, needsYou } from "./model";
 import { setZen, usePrefs, useZen } from "./prefs";
-
-function useClock(): string {
-  const format = () => new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-  const [time, setTime] = useState(format);
-  useEffect(() => {
-    const timer = setInterval(() => setTime(format()), 15_000);
-    return () => clearInterval(timer);
-  }, []);
-  return time;
-}
 
 export function StatusBar() {
   const { threads } = useSidebarThreads();
   const navigate = useBbNavigate();
   const [prefs] = usePrefs();
   const zen = useZen();
-  const time = useClock();
 
   useEffect(() => {
     if (!zen) return;
@@ -36,6 +27,18 @@ export function StatusBar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [zen]);
 
+  const live = threads.filter((thread) => !thread.isArchived && !thread.isHidden);
+  const running = live.filter((thread) => isBusy(thread) && !needsYou(thread)).length;
+  const waiting = prefs.island ? 0 : live.filter(needsYou).length;
+  const unread = live.filter((thread) => thread.isUnread && thread.parentThreadId === null && !needsYou(thread) && !isBusy(thread)).length;
+  const items = [
+    { count: running, label: "running" },
+    { count: waiting, label: waiting === 1 ? "needs you" : "need you" },
+    { count: unread, label: "to review" },
+  ].filter((item) => item.count > 0);
+  const shown = prefs.statusbar && !zen && items.length > 0;
+  useGutterClaim(shown);
+
   if (zen) {
     return (
       <button type="button" className="pl-zen-exit" onClick={() => setZen(false)}>
@@ -43,23 +46,15 @@ export function StatusBar() {
       </button>
     );
   }
-  if (!prefs.statusbar) return null;
-
-  const live = threads.filter((thread) => !thread.isArchived && !thread.isHidden);
-  const running = live.filter((thread) => isBusy(thread) && !needsYou(thread)).length;
-  const waiting = live.filter(needsYou).length;
-  const unread = live.filter((thread) => thread.isUnread && thread.parentThreadId === null && !needsYou(thread) && !isBusy(thread)).length;
+  if (!shown) return null;
 
   return (
     <div className="pl-statusbar" role="status" aria-label="Thread status">
       <button type="button" className="pl-statusbar-item" onClick={() => navigate.toPluginPanel("overview")} title="Open Overview">
-        <span data-zero={running === 0 || undefined}><b>{running}</b> running</span>
-        {prefs.island ? null : (
-          <span data-zero={waiting === 0 || undefined}><b>{waiting}</b> need you</span>
-        )}
-        <span data-zero={unread === 0 || undefined}><b>{unread}</b> to review</span>
+        {items.map((item) => (
+          <span key={item.label}><b>{item.count}</b> {item.label}</span>
+        ))}
       </button>
-      <span className="pl-statusbar-time">{time}</span>
     </div>
   );
 }

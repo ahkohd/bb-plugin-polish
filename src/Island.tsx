@@ -12,6 +12,7 @@ import {
   type BbNavigate,
   type PluginSidebarThread,
 } from "@get-bb/plugin-sdk/app";
+import { useGutterClaim } from "./gutter";
 import { compactAge, lastActive, waitingOnYou } from "./model";
 import { usePrefs } from "./prefs";
 import { useNow } from "./ui";
@@ -53,7 +54,9 @@ export function NeedsYouIsland() {
   }, []);
 
   const waiting = waitingOnYou(threads).filter((thread) => thread.id !== openId);
-  if (!prefs.island || waiting.length === 0) return null;
+  const shown = prefs.island && waiting.length > 0;
+  useGutterClaim(shown && prefs.statusbar);
+  if (!shown) return null;
   const first = waiting[0]!;
   const label = waiting.length === 1
     ? first.displayTitle

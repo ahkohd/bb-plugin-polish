@@ -177,7 +177,7 @@ export function PolishSettings() {
             onChange={(density) => update({ density })}
           />
         </Field>
-        <Field label="Status line" hint="Running, waiting and unread counts with the time, under the main area.">
+        <Field label="Status line" hint="Running and unread counts under the main area. It shows only when there is something to count.">
           <Switch label="Status line" checked={prefs.statusbar} onChange={(statusbar) => update({ statusbar })} />
         </Field>
       </Section>

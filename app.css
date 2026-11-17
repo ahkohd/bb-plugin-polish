@@ -937,12 +937,6 @@ html[data-polish-zen] .pl-island {
 .pl-statusbar-item > span[data-zero] {
   opacity: 0.55;
 }
-.pl-statusbar-time {
-  margin-left: 0.85rem;
-  padding-left: 0.85rem;
-  border-left: 1px solid var(--border);
-  line-height: 1;
-}
 
 /* Needs-you pill: a still mark, no pulse. */
 .pl-island-pulse::after {
@@ -950,4 +944,25 @@ html[data-polish-zen] .pl-island {
 }
 .pl-island-pill {
   box-shadow: var(--shadow-lg), inset 0 1px 0 var(--cp-highlight, transparent);
+}
+
+/* Raised keys in Polish's own controls, matching bb's header controls. */
+.pl-segmented > button[data-selected] {
+  background: var(--cp-raise, var(--card));
+  box-shadow: var(--cp-raise-shadow, 0 0 0 1px var(--border));
+}
+.pl-segmented {
+  border-radius: 9px;
+}
+.pl-segmented > button {
+  border-radius: 7px;
+}
+.pl-button:not(.pl-button-primary) {
+  border: 0;
+  border-radius: 8px;
+  background: var(--cp-raise, var(--card));
+  box-shadow: var(--cp-raise-shadow, 0 0 0 1px var(--border));
+}
+.pl-button-primary {
+  border-radius: 8px;
 }
