@@ -1,12 +1,12 @@
 // The Overview page: every thread that needs you, is working, is ready for
-// review or ran recently, in Capy's grouped style. Also the badge on its
-// navigation item and a short version for the New thread page.
+// review or ran recently, in Capy's grouped style, and the badge on its
+// navigation item.
 import { useMemo, useState } from "react";
 import {
   experimental_useSidebarThreads as useSidebarThreads,
   useBbNavigate,
   type ExperimentalBadge,
-  type PluginHomepageSectionProps,
+  type PluginAppBuilder,
   type PluginSidebarThread,
 } from "@get-bb/plugin-sdk/app";
 import {
@@ -16,8 +16,9 @@ import {
   groupThreads,
   needsYou,
   type Bucket,
-} from "./model";
-import { EmptyNote, Group, ThreadRow, useNow, useProjectLookup } from "./ui";
+} from "../model";
+import { EmptyNote, Group, ThreadRow, useNow, useProjectLookup } from "../ui";
+import "./overview.css";
 
 const RECENT_PAGE = 12;
 
@@ -160,55 +161,23 @@ function greeting(now: number): string {
   return "Good evening";
 }
 
-/** A short list on the New thread page: what needs you, what is running and
- *  where you left off. */
-export function HomeSection({ projectId }: PluginHomepageSectionProps) {
-  const { status, threads, projects } = useSidebarThreads();
-  const now = useNow();
-  const navigate = useBbNavigate();
-  const projectLookup = useProjectLookup(projects);
-  const byId = useMemo(() => new Map(threads.map((thread) => [thread.id, thread])), [threads]);
-  const groups = useMemo(() => groupThreads(threads, now, projectId), [threads, now, projectId]);
-  if (status !== "ready") return null;
-  const needs = groups.needs.slice(0, 4);
-  const running = groups.running.slice(0, 4);
-  const recent = [...groups.ready, ...groups.recent].slice(0, needs.length + running.length > 0 ? 3 : 5);
-  if (needs.length + running.length + recent.length === 0) {
-    return <EmptyNote>No threads yet. Ask anything above to start one.</EmptyNote>;
-  }
-
-  const rows = (list: PluginSidebarThread[]) =>
-    list.map((thread) => (
-      <ThreadRow
-        key={thread.id}
-        thread={thread}
-        now={now}
-        project={projectLookup.get(thread.projectId)}
-        parent={thread.parentThreadId ? byId.get(thread.parentThreadId) : undefined}
-        showProject={projectId === null}
-      />
-    ));
-
+function OverviewIcon({ className }: { className?: string }) {
   return (
-    <div className="pl-home">
-      {needs.length > 0 ? (
-        <Group id="home.needs" label="Needs you" count={groups.needs.length} tone="attention">
-          {rows(needs)}
-        </Group>
-      ) : null}
-      {running.length > 0 ? (
-        <Group id="home.running" label="In progress" count={groups.running.length}>
-          {rows(running)}
-        </Group>
-      ) : null}
-      {recent.length > 0 ? (
-        <Group id="home.recent" label="Jump back in" count={groups.ready.length + groups.recent.length}>
-          {rows(recent)}
-        </Group>
-      ) : null}
-      <button type="button" className="pl-link-button" onClick={() => navigate.toPluginPanel(OVERVIEW_PATH)}>
-        Open Overview
-      </button>
-    </div>
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="4" width="17" height="4.5" rx="1.5" />
+      <path d="M6.5 12.5h11M6.5 16.5h7M6.5 20h9" />
+    </svg>
   );
+}
+
+export function registerOverview(app: PluginAppBuilder): void {
+  app.experimental_icons.register({ name: "polish.overview", component: OverviewIcon });
+  app.slots.navPanel({
+    id: "overview",
+    title: "Overview",
+    icon: "polish.overview",
+    path: OVERVIEW_PATH,
+    component: OverviewPage,
+    experimental_useBadge: useNeedsYouBadge,
+  });
 }

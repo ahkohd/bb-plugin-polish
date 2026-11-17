@@ -4,10 +4,12 @@ import { useMemo } from "react";
 import {
   experimental_useSidebarThreads as useSidebarThreads,
   type ExperimentalThreadContextSegmentProps,
+  type PluginAppBuilder,
   type ExperimentalThreadTabProps,
 } from "@get-bb/plugin-sdk/app";
-import { childrenByParent, descendants, isBusy, needsYou, statusPhrase } from "./model";
-import { EmptyNote, ThreadRow, useNow } from "./ui";
+import { childrenByParent, descendants, isBusy, needsYou, statusPhrase } from "../model";
+import { EmptyNote, ThreadRow, useNow } from "../ui";
+import "./crew.css";
 
 export function useHasCrew({ threadId }: { threadId: string }): boolean {
   const { threads } = useSidebarThreads();
@@ -98,3 +100,37 @@ export function CrewSegmentDetails({ threadId }: ExperimentalThreadContextSegmen
   );
 }
 
+
+function CrewIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="6" cy="5.5" r="2" />
+      <path d="M6 7.5v9.5a2 2 0 0 0 2 2h3M6 12h5" />
+      <circle cx="14" cy="12" r="2" />
+      <circle cx="14" cy="19" r="2" />
+    </svg>
+  );
+}
+
+export function registerCrew(app: PluginAppBuilder): void {
+  app.experimental_icons.register({ name: "polish.crew", component: CrewIcon });
+  app.slots.experimental_tab({
+    context: { kind: "thread" },
+    availability: "fixed",
+    id: "crew",
+    title: "Crew",
+    icon: "polish.crew",
+    tooltip: "Threads this thread started",
+    layout: "flush",
+    useVisible: useHasCrew,
+    component: CrewTab,
+  });
+  app.slots.experimental_threadContextSegment({
+    id: "crew",
+    title: "Crew",
+    group: "2_crew",
+    summary: CrewSegmentSummary,
+    details: CrewSegmentDetails,
+    useVisible: useHasCrew,
+  });
+}
