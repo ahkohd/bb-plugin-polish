@@ -2210,7 +2210,7 @@ describe("decision mode", () => {
 });
 
 describe("decision settings", () => {
-  const section = app.settingsSections[0]!;
+  const section = app.settingsSections.find((entry) => entry.id === "sidebar")!;
   const decision = (
     title: string,
     quiet: boolean,

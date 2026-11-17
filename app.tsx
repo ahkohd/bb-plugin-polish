@@ -34,7 +34,6 @@ export default definePluginApp((app) => {
   registerHome(app);
   registerCrew(app);
   registerNav(app);
-  registerSidebar(app);
 
   app.contentScripts.register({
     id: "prefs",
@@ -123,4 +122,7 @@ export default definePluginApp((app) => {
     description: "Palette, layout, density and accent for the Polish theme.",
     component: PolishSettings,
   });
+
+  // After Appearance, so the sidebar's settings follow the theme's.
+  registerSidebar(app);
 });
