@@ -7,6 +7,7 @@ import { registerCrew } from "./src/features/crew";
 import { registerHome } from "./src/features/home";
 import { registerNav } from "./src/features/nav";
 import { OVERVIEW_PATH, registerOverview } from "./src/features/overview";
+import { registerSidebar } from "./src/sidebar/register";
 import { bridge, currentThreadId, NeedsYouIsland } from "./src/Island";
 import { nextNeedingYou } from "./src/model";
 import { PolishSettings } from "./src/Settings";
@@ -33,6 +34,7 @@ export default definePluginApp((app) => {
   registerHome(app);
   registerCrew(app);
   registerNav(app);
+  registerSidebar(app);
 
   app.contentScripts.register({
     id: "prefs",

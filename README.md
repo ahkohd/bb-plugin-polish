@@ -23,6 +23,15 @@ Switch back with `bb theme reset`.
 
 ## Pages and pieces
 
+- **Sidebar inbox**: a thread list that never re-orders. Threads stay in the
+  order you started them, with their project, status or age at the end of
+  each row and children under a guide line. Snooze, settle or mute a thread
+  and it moves to a shelf docked at the bottom of the sidebar; it comes back
+  when it finishes, fails or asks you something. Pick it in Settings,
+  Appearance, Thread list. This is
+  [Beside](https://github.com/ahkohd/bb-plugin-beside) brought into Polish:
+  the first time Polish starts, it copies Beside's shelves and settings over,
+  and Settings, Polish, Sidebar can copy them again.
 - **Overview**: every thread that needs you, is in progress, is ready for
   review or ran in the last week, as a list or a board. Move with `j` and `k`,
   peek at a thread beside the list and answer it there, filter with `/` or
@@ -35,8 +44,8 @@ Switch back with `bb theme reset`.
   live timers and a progress bar.
 - **Needs-you pill**: shows while any thread waits on you; click to jump to
   the one that has waited longest.
-- **Status line**: running and unread counts with the time, under the main
-  area.
+- **Status line**: running, waiting and unread counts under the main area,
+  shown only when there is something to count.
 - **Zen mode**: the thread alone, with the sidebar and side panel hidden.
 
 ## Commands
@@ -55,7 +64,9 @@ All are in Settings, Keyboard, where you can rebind them.
 
 Settings, Polish: look (palette, accent, backdrop), layout (main area, side
 panel, density, status line), text (font, headings, reading size) and
-attention (needs-you pill). They are saved per device.
+attention (needs-you pill). They are saved per device. Settings, Polish,
+Sidebar holds the sidebar's decision mode, which can let a model keep routine
+news on its shelf, and the button that copies Beside's shelves over.
 
 ## Development
 
