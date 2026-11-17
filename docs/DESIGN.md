@@ -13,7 +13,10 @@ spec wins; when neither covers a case, pick the quieter option.
    repeat a label. Shadows only on things that float.
 4. Quiet until needed. Secondary controls sit at 55-70% strength and come up
    on hover or focus.
-5. Fast. Hover changes are instant or 120-150ms. Movement is 200-300ms with
+5. Colour means something or it is not there. Counts are plain text. No
+   traffic-light dots, no coloured squares, no outline boxes for focus on
+   rows. The only tinted figure is the one that needs you.
+6. Fast. Hover changes are instant or 120-150ms. Movement is 200-300ms with
    `cubic-bezier(0.23, 1, 0.32, 1)`. Pressing a button scales it to 0.97-0.98.
    Honour `prefers-reduced-motion`.
 

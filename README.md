@@ -25,13 +25,14 @@ Switch back with `bb theme reset`.
 
 - **Overview**: every thread that needs you, is in progress, is ready for
   review or ran in the last week, as a list or a board. Move with `j` and `k`,
-  peek at a thread beside the list and answer it there, filter with `/`.
+  peek at a thread beside the list and answer it there, filter with `/` or
+  by project.
 - **New thread page**: a pulse line with a 14-day sparkline, your projects,
   four starters, and what needs you.
 - **Polish dock**: a compact sidebar navigation: a New thread button and one
   row of icons. Pick it in Settings, Appearance, Navigation.
 - **Crew**: a tab beside any thread that started other threads, with filters,
-  live timers and a progress bar, and a one-line summary above the composer.
+  live timers and a progress bar.
 - **Needs-you pill**: shows while any thread waits on you; click to jump to
   the one that has waited longest.
 - **Status line**: running and unread counts with the time, under the main

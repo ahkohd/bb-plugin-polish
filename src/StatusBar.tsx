@@ -53,11 +53,11 @@ export function StatusBar() {
   return (
     <div className="pl-statusbar" role="status" aria-label="Thread status">
       <button type="button" className="pl-statusbar-item" onClick={() => navigate.toPluginPanel("overview")} title="Open Overview">
-        <span data-bucket="running" data-zero={running === 0 || undefined}><span className="pl-dot" />{running} running</span>
+        <span data-zero={running === 0 || undefined}><b>{running}</b> running</span>
         {prefs.island ? null : (
-          <span data-bucket="needs" data-zero={waiting === 0 || undefined}><span className="pl-dot" />{waiting} need you</span>
+          <span data-zero={waiting === 0 || undefined}><b>{waiting}</b> need you</span>
         )}
-        <span data-bucket="ready" data-zero={unread === 0 || undefined}><span className="pl-dot" />{unread} to review</span>
+        <span data-zero={unread === 0 || undefined}><b>{unread}</b> to review</span>
       </button>
       <span className="pl-statusbar-time">{time}</span>
     </div>

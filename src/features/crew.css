@@ -30,3 +30,7 @@
 .pl-crew-entry .pl-row-title-line { min-width: 0; }
 .pl-crew-entry .pl-row-meta { display: flex; flex: none; }
 .pl-crew-entry .pl-meta-item { display: none; }
+/* Refinement pass: settled is neutral; only working and waiting are tinted. */
+.pl-crew .pl-crew-progress > [data-bucket="ready"] { background: color-mix(in oklab, var(--foreground) 22%, transparent); }
+.pl-crew .pl-crew-progress > [data-bucket="running"] { background: var(--foreground); }
+.pl-crew button:focus-visible { outline: 1.5px solid var(--ring); outline-offset: 1px; }

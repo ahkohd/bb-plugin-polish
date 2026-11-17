@@ -17,3 +17,8 @@
 .pl-home kbd { font: inherit; font-size: 11px; opacity: .55; border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; }
 .pl-home button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .pl-home-starter { transition: none; } }
+/* Refinement pass */
+.pl-home button:focus-visible { outline: 1.5px solid var(--ring); outline-offset: 1px; }
+.pl-home-projects .pl-chip { height: 26px; background: var(--state-hover); }
+.pl-home-projects .pl-chip:hover { background: var(--state-active); }
+.pl-home-projects .pl-dot { background: var(--foreground); opacity: .7; }

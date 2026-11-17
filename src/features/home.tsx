@@ -65,7 +65,7 @@ export function HomeSection({ projectId: selectedProjectId }: PluginHomepageSect
             { count: groups.running.length, label: "running", bucket: "running" },
             { count: groups.needs.length, label: "need you", bucket: "needs" },
             { count: days.slice(-7).reduce((sum, day) => sum + day.count, 0), label: "this week", bucket: "recent" },
-          ].map(item => <span className="pl-summary-item" key={item.label} data-bucket={item.bucket} data-zero={item.count === 0 || undefined}><span className="pl-dot" />{item.count} {item.label}</span>)}
+          ].map(item => <span className="pl-summary-item" key={item.label} data-bucket={item.bucket} data-zero={item.count === 0 || undefined}>{item.count} {item.label}</span>)}
         </div>
         <div className="pl-home-spark" aria-label="Threads created over the last 14 days">{days.map(day => <span key={day.timestamp} title={day.label} data-today={day.today || undefined} style={{ height: `${Math.max(2, day.count / maximum * 22)}px` }} />)}</div>
       </div>

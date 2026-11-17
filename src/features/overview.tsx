@@ -45,8 +45,7 @@ function Summary({ counts }: { counts: Record<Bucket, number> }) {
     <div className="pl-summary">
       {parts.map((part) => (
         <span key={part.key} className="pl-summary-item" data-bucket={part.key} data-zero={counts[part.key] === 0 || undefined}>
-          <span className="pl-dot" />
-          {part.text}
+                    {part.text}
         </span>
       ))}
     </div>
@@ -127,7 +126,7 @@ export function OverviewPage() {
           {provider ? <ProviderIcon providerKind="agent" provider={provider} className="pl-provider-icon" aria-hidden /> : null}
           <span className="pl-meta-item">{projectLookup.get(thread.projectId)?.name ?? "Personal"}</span>
           {branch ? <span className="pl-meta-item pl-mono">{branch}</span> : null}
-          {subs.length ? <span className="pl-segment-dots" aria-label={`${subs.length} subthreads`}>{subs.slice(0, 8).map(child => <span key={child.id} data-bucket={needsYou(child) ? "needs" : isBusy(child) ? "running" : "ready"} />)}</span> : null}
+          {subs.length ? <span className="pl-meta-item pl-subcount" data-needs={subs.some(needsYou) || undefined} title={`${subs.length} ${subs.length === 1 ? "subthread" : "subthreads"}${subs.some(isBusy) ? `, ${subs.filter(isBusy).length} working` : ""}`}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4.5 3v6.5a2 2 0 0 0 2 2H11M4.5 6.5H11" /></svg>{subs.length}</span> : null}
         </span>
       </span>
       {view === "board" ? <span className="pl-overview-card-footer"><span><Glyph thread={thread} />{statusPhrase(thread) ?? "Idle"}</span><span>{compactAge(lastActive(thread), now)}</span></span> : <span className="pl-row-time">{compactAge(lastActive(thread), now)}</span>}
@@ -137,13 +136,13 @@ export function OverviewPage() {
     <header className="pl-overview-top" data-scrolled={scrolled || undefined}>
       <div className="pl-overview-toolbar"><div><h1 className="pl-hero-title">{greeting(now)}</h1><Summary counts={counts} /></div>
         <div className="pl-overview-actions">
+          {activeProjects.length > 1 ? <label className="pl-select"><select aria-label="Project" value={projectId ?? ""} onChange={event => setProjectId(event.target.value || null)}><option value="">All projects</option>{activeProjects.map(project => <option key={project.id} value={project.id}>{project.isPersonal ? "Personal" : project.name}</option>)}</select><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5" /></svg></label> : null}
           <label className="pl-overview-search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4" /><path d="m10 10 3.5 3.5" /></svg><input ref={filter} aria-label="Filter threads" placeholder="Filter threads" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); event.stopPropagation(); } }} /></label>
           <div className="pl-segmented" aria-label="Overview view">{["list", "board"].map(value => <button key={value} type="button" aria-pressed={view === value} data-selected={view === value || undefined} onClick={() => setView(value)}>{value === "list" ? "List" : "Board"}</button>)}</div>
           <button type="button" className="pl-overview-icon" aria-label="Toggle peek" title="Toggle peek (p)" aria-pressed={peek} onClick={() => setPeek(value => !value)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2" /><path d="M9 3v10" /></svg></button>
           <button type="button" className="pl-button pl-button-primary" onClick={() => navigate.toCompose({ projectId: projectId ?? undefined, focusPrompt: true })}>New thread</button>
         </div>
       </div>
-      {activeProjects.length > 1 ? <nav className="pl-filter" aria-label="Project"><button className="pl-chip" data-selected={!projectId || undefined} onClick={() => setProjectId(null)}>All projects</button>{activeProjects.map(project => <button key={project.id} className="pl-chip" data-selected={projectId === project.id || undefined} onClick={() => setProjectId(project.id)}>{project.isPersonal ? "Personal" : project.name}</button>)}</nav> : null}
     </header>
     <div className="pl-overview-body">
       <div className="pl-overview-list" onScrollCapture={event => { if (event.target instanceof HTMLElement) setScrolled(event.target.scrollTop > 0); }}>

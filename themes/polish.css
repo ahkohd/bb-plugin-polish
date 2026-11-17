@@ -40,6 +40,8 @@
   --cp-purple: #8a4fc4;
   --cp-float-shadow: 0 10px 28px -8px rgb(0 0 0 / 0.14), 0 2px 6px -2px rgb(0 0 0 / 0.06);
 
+  --cp-highlight: transparent;   /* top edge light on raised things */
+
   /* Accent: blue unless Settings > Polish says otherwise. */
   --pl-accent: #3b5de8;
   --pl-accent-fg: #ffffff;
@@ -68,6 +70,7 @@
   --cp-green-text: #4fcf5a;
   --cp-purple: #b48cf0;
   --cp-float-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 2px 8px -2px rgb(0 0 0 / 0.4);
+  --cp-highlight: rgb(255 255 255 / 0.045);
 
   --pl-accent: #456af6;
   --pl-accent-fg: #ffffff;
@@ -128,6 +131,11 @@ html.dark[data-polish-accent="blue"] { --pl-accent: #456af6; --pl-accent-fg: #ff
 
 /* ---------- Roles onto bb tokens (both modes) ---------- */
 :root, .light, .dark {
+  /* A well is a recessed area inside a panel: a code block, a pinned
+     message. It is the panel nudged toward the text colour, so it reads as
+     slightly lighter in dark mode and slightly darker in light. */
+  --cp-well: color-mix(in oklab, var(--cp-text) 4%, var(--cp-panel));
+
   --canvas: var(--cp-panel);
   --ink: var(--cp-text);
   --background: var(--cp-panel);
@@ -165,13 +173,13 @@ html.dark[data-polish-accent="blue"] { --pl-accent: #456af6; --pl-accent-fg: #ff
   --border-seam: var(--cp-line);
   --border-seam-vertical: var(--cp-line);
   --input: var(--cp-line-2);
-  --ring: color-mix(in oklab, var(--pl-accent) 50%, transparent);
+  --ring: color-mix(in oklab, var(--cp-text) 32%, transparent);
 
   --state-hover: var(--cp-hover);
   --state-active: var(--cp-active);
-  --surface-recessed: var(--cp-frame);
-  --surface-recessed-solid: var(--cp-frame);
-  --surface-recessed-soft-solid: var(--cp-frame);
+  --surface-recessed: var(--cp-well);
+  --surface-recessed-solid: var(--cp-well);
+  --surface-recessed-soft-solid: var(--cp-well);
   --surface-raised: var(--cp-card);
   --surface-raised-solid: var(--cp-card);
   --surface-scrim: var(--cp-panel);
@@ -299,6 +307,35 @@ html[data-polish-statusbar="on"]:not([data-polish-layout="flat"]):not([data-poli
   }
   html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel] > aside[data-surface-tone="sidebar"] .bg-sidebar {
     background: transparent;
+  }
+}
+
+/* ---------- Edges: a faint top light on raised surfaces (dark mode) ---------- */
+@media (min-width: 768px) {
+  html:not([data-polish-layout="flat"]) [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"],
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel] > [data-split-pane-id],
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel] > aside[data-surface-tone="sidebar"] > div {
+    box-shadow: inset 0 1px 0 var(--cp-highlight);
+  }
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) > main[data-sidebar="inset"]:has([data-panel] > aside[data-surface-tone="sidebar"]) {
+    box-shadow: none;
+  }
+  /* Between cards the resize handle is invisible until you reach for it,
+     then a short grip shows in the middle of the gap. */
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel-resize-handle-id] > span:not([data-panel-resize-hit-target]) {
+    left: calc(100% + (var(--pl-gutter) / 2) - 1px);
+    top: calc(50% - 18px);
+    bottom: auto;
+    width: 2px;
+    height: 36px;
+    border-radius: 2px;
+    background: transparent;
+  }
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel-resize-handle-id] > [data-panel-resize-hit-target] {
+    left: calc(100% + (var(--pl-gutter) / 2));
+  }
+  html:not([data-polish-layout="flat"]):not([data-polish-panels="joined"]) [data-testid="app-layout-root"]:not([data-framed]) [data-panel-resize-handle-id]:is(:hover, [data-resize-handle-state="drag"], [data-resize-handle-state="hover"]) > span:not([data-panel-resize-hit-target]) {
+    background: var(--cp-line-3);
   }
 }
 
@@ -442,6 +479,11 @@ html[data-polish-density="compact"] [data-markdown-preview] {
   border-radius: 10px;
   padding: 4px;
 }
+[role="menu"][data-bb-portaled-overlay],
+[data-radix-popper-content-wrapper] > [data-bb-portaled-overlay],
+[data-testid="command-palette"] {
+  box-shadow: var(--cp-float-shadow), inset 0 1px 0 var(--cp-highlight);
+}
 [role="menuitem"],
 [role="menuitemradio"],
 [role="menuitemcheckbox"] {
@@ -460,14 +502,24 @@ html[data-polish-density="compact"] [data-markdown-preview] {
 }
 
 /* ---------- Controls ---------- */
-/* Send: the accent, a soft square. */
-[data-promptbox-submit-action] {
+/* Send: the accent once there is something to send, quiet until then. The
+   split button's wrapper carries the fill; its buttons are transparent. */
+form[data-promptbox] [data-promptbox-send-menu] {
   background: var(--pl-accent);
   color: var(--pl-accent-fg);
   border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16);
 }
-[data-promptbox-submit-action]:hover {
-  background: color-mix(in oklab, var(--pl-accent) 88%, black);
+form[data-promptbox] [data-promptbox-send-menu]:hover {
+  background: color-mix(in oklab, var(--pl-accent) 90%, var(--cp-text));
+}
+form[data-promptbox] [data-promptbox-send-menu]:has([data-promptbox-submit-action]:disabled) {
+  background: var(--cp-active);
+  color: var(--cp-text-3);
+  box-shadow: none;
+}
+form[data-promptbox] [data-promptbox-send-menu] button {
+  opacity: 1 !important;
 }
 /* Switches: the accent when on. */
 [role="switch"][data-state="checked"] {
@@ -573,7 +625,7 @@ html[data-polish-palette="conductor"] .bb-sidebar-selected-row {
 [data-markdown-preview] div:has(> pre.bb-code-highlight) {
   border-radius: 10px;
   border-color: var(--cp-line);
-  background: color-mix(in oklab, var(--cp-frame) 60%, var(--cp-panel));
+  background: var(--cp-well);
 }
 [data-markdown-preview] div:has(> pre.bb-code-highlight) > [data-clipboard-ignore] {
   opacity: 0.55;
@@ -591,7 +643,7 @@ form[data-promptbox] {
   border-radius: 12px;
   border-color: var(--cp-line-2);
   background: var(--cp-card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), inset 0 1px 0 var(--cp-highlight);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 form[data-promptbox]:focus-within {

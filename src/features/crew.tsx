@@ -5,7 +5,6 @@ import {
   useBbNavigate,
   experimental_ProviderIcon as ProviderIcon,
   experimental_useSidebarThreads as useSidebarThreads,
-  type ExperimentalThreadContextSegmentProps,
   type PluginAppBuilder,
   type ExperimentalThreadTabProps,
 } from "@get-bb/plugin-sdk/app";
@@ -53,9 +52,9 @@ export function CrewTab({ threadId }: ExperimentalThreadTabProps) {
           return provider ? <span key={id} title={provider.displayName}><ProviderIcon providerKind="agent" provider={provider} className="pl-provider-icon" aria-hidden /></span> : null;
         })}{providerIds.length > 4 ? <small>+{providerIds.length - 4}</small> : null}</span></div>
         <span className="pl-crew-stats">
-          {waiting > 0 ? <span data-bucket="needs"><span className="pl-dot" />{waiting} need you</span> : null}
-          {working > 0 ? <span data-bucket="running"><span className="pl-dot" />{working} working</span> : null}
-          {done > 0 ? <span data-bucket="ready"><span className="pl-dot" />{done} settled</span> : null}
+          {waiting > 0 ? <span data-bucket="needs">{waiting} need you</span> : null}
+          {working > 0 ? <span data-bucket="running">{working} working</span> : null}
+          {done > 0 ? <span data-bucket="ready">{done} settled</span> : null}
         </span>
       </div>
       <div className="pl-crew-progress" aria-hidden="true">
@@ -83,44 +82,6 @@ export function CrewTab({ threadId }: ExperimentalThreadTabProps) {
   );
 }
 
-/** The Crew segment in the context row above the composer. */
-export function CrewSegmentSummary({ threadId, isExpanded, onToggle }: ExperimentalThreadContextSegmentProps) {
-  const { threads } = useSidebarThreads();
-  const children = useMemo(() => childrenByParent(threads), [threads]);
-  const crew = useMemo(() => descendants(threadId, children), [threadId, children]);
-  if (crew.length === 0) return null;
-  const working = crew.filter(({ thread }) => isBusy(thread)).length;
-  const waiting = crew.filter(({ thread }) => needsYou(thread)).length;
-  const parts = [`${crew.length} ${crew.length === 1 ? "subthread" : "subthreads"}`];
-  if (waiting > 0) parts.push(`${waiting} need you`);
-  if (working > 0) parts.push(`${working} working`);
-  return (
-    <button type="button" className="pl-segment" aria-expanded={isExpanded} onClick={onToggle}>
-      <span className="pl-segment-dots" aria-hidden="true">
-        {crew.slice(0, 8).map(({ thread }) => (
-          <span key={thread.id} data-bucket={needsYou(thread) ? "needs" : isBusy(thread) ? "running" : "ready"} />
-        ))}
-      </span>
-      {parts.join(" · ")}
-    </button>
-  );
-}
-
-export function CrewSegmentDetails({ threadId }: ExperimentalThreadContextSegmentProps) {
-  const { threads } = useSidebarThreads();
-  const now = useNow();
-  const children = useMemo(() => childrenByParent(threads), [threads]);
-  const crew = useMemo(() => descendants(threadId, children), [threadId, children]);
-  return (
-    <div className="pl-segment-details">
-      {crew.map(({ thread, depth }) => (
-        <ThreadRow key={thread.id} thread={thread} now={now} depth={depth} showProject={false} trailing={statusPhrase(thread) ?? undefined} />
-      ))}
-    </div>
-  );
-}
-
-
 function CrewIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -144,14 +105,6 @@ export function registerCrew(app: PluginAppBuilder): void {
     layout: "flush",
     useVisible: useHasCrew,
     component: CrewTab,
-  });
-  app.slots.experimental_threadContextSegment({
-    id: "crew",
-    title: "Crew",
-    group: "2_crew",
-    summary: CrewSegmentSummary,
-    details: CrewSegmentDetails,
-    useVisible: useHasCrew,
   });
 }
 
