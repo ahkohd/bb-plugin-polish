@@ -1,14 +1,17 @@
 // The Crew tab beside a thread: every thread it started, nested, with what
 // each one is doing, like Capy's Captain view.
-import { useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
+  useBbNavigate,
+  experimental_ProviderIcon as ProviderIcon,
   experimental_useSidebarThreads as useSidebarThreads,
   type ExperimentalThreadContextSegmentProps,
   type PluginAppBuilder,
   type ExperimentalThreadTabProps,
 } from "@get-bb/plugin-sdk/app";
-import { childrenByParent, descendants, isBusy, needsYou, statusPhrase } from "../model";
-import { EmptyNote, ThreadRow, useNow } from "../ui";
+import { childrenByParent, descendants, isBusy, needsYou, statusPhrase, waitingOnYou, compactAge, lastActive } from "../model";
+import { EmptyNote, ThreadRow, useNow, useProviderLookup } from "../ui";
+import { crewBucket, filterCrew, formatElapsed, parseCrewFilter, type CrewFilter } from "./crew-model";
 import "./crew.css";
 
 export function useHasCrew({ threadId }: { threadId: string }): boolean {
@@ -18,21 +21,37 @@ export function useHasCrew({ threadId }: { threadId: string }): boolean {
 
 export function CrewTab({ threadId }: ExperimentalThreadTabProps) {
   const { status, threads } = useSidebarThreads();
-  const now = useNow();
+  const now = useCrewClock();
+  const navigate = useBbNavigate();
+  const providers = useProviderLookup();
+  const [filter, setFilter] = useState<CrewFilter>(() => {
+    try { return parseCrewFilter(localStorage.getItem("polish.crew.filter")); } catch { return "all"; }
+  });
   const children = useMemo(() => childrenByParent(threads), [threads]);
   const crew = useMemo(() => descendants(threadId, children), [threadId, children]);
 
   if (status === "loading") return <EmptyNote>Loading…</EmptyNote>;
   if (crew.length === 0) return <EmptyNote>This thread has not started any threads.</EmptyNote>;
 
-  const working = crew.filter(({ thread }) => isBusy(thread)).length;
+  const working = crew.filter(({ thread }) => crewBucket(thread) === "working").length;
   const waiting = crew.filter(({ thread }) => needsYou(thread)).length;
   const done = crew.length - working - waiting;
 
+  const providerIds = [...new Set(crew.map(({ thread }) => thread.providerId))];
+  const filters: { id: CrewFilter; label: string; count: number }[] = [
+    { id: "all", label: "All", count: crew.length }, { id: "working", label: "Working", count: working },
+    { id: "needs", label: "Needs you", count: waiting }, { id: "settled", label: "Settled", count: done },
+  ];
+  const visibleFilter = filters.some(item => item.id === filter && item.count > 0) ? filter : "all";
+  const next = waitingOnYou(crew.map(item => item.thread))[0];
   return (
     <div className="pl-crew">
       <div className="pl-crew-head">
-        <span className="pl-crew-count">{crew.length} {crew.length === 1 ? "thread" : "threads"}</span>
+        <div className="pl-crew-title"><span className="pl-crew-count">{crew.length} {crew.length === 1 ? "thread" : "threads"}</span>
+        <span className="pl-crew-providers">{providerIds.slice(0, 4).map(id => {
+          const provider = providers.get(id);
+          return provider ? <span key={id} title={provider.displayName}><ProviderIcon providerKind="agent" provider={provider} className="pl-provider-icon" aria-hidden /></span> : null;
+        })}{providerIds.length > 4 ? <small>+{providerIds.length - 4}</small> : null}</span></div>
         <span className="pl-crew-stats">
           {waiting > 0 ? <span data-bucket="needs"><span className="pl-dot" />{waiting} need you</span> : null}
           {working > 0 ? <span data-bucket="running"><span className="pl-dot" />{working} working</span> : null}
@@ -47,18 +66,19 @@ export function CrewTab({ threadId }: ExperimentalThreadTabProps) {
           />
         ))}
       </div>
-      <div className="pl-group-body">
-        {crew.map(({ thread, depth }) => (
-          <ThreadRow
-            key={thread.id}
-            thread={thread}
-            now={now}
-            depth={depth}
-            showProject={false}
-            trailing={statusPhrase(thread) ?? undefined}
-          />
+      <div className="pl-crew-filters">{filters.filter(item => item.id === "all" || item.count > 0).map(item => <button type="button" className="pl-chip" key={item.id} aria-pressed={visibleFilter === item.id} data-selected={visibleFilter === item.id || undefined} onClick={() => {
+        setFilter(item.id);
+        try { localStorage.setItem("polish.crew.filter", item.id); } catch { /* Choice still works without storage. */ }
+      }}>{item.label} <span>{item.count}</span></button>)}</div>
+      <div className="pl-crew-roster">
+        {filterCrew(crew, visibleFilter).map(({ thread, depth }) => (
+          <div className="pl-crew-entry" key={thread.id} data-working={crewBucket(thread) === "working" || undefined} data-needs={needsYou(thread) || undefined}>
+            {Array.from({ length: depth }, (_, level) => <span className="pl-crew-guide" key={level} />)}
+            <ThreadRow thread={thread} now={now} showProject={false} trailing={needsYou(thread) ? statusPhrase(thread) ?? "Needs you" : isBusy(thread) ? formatElapsed(thread.createdAt, now) : compactAge(lastActive(thread), now)} />
+          </div>
         ))}
       </div>
+      {next ? <button type="button" className="pl-button pl-crew-next" onClick={() => navigate.toThread(next.id)}>Go to the next one that needs you</button> : null}
     </div>
   );
 }
@@ -133,4 +153,22 @@ export function registerCrew(app: PluginAppBuilder): void {
     details: CrewSegmentDetails,
     useVisible: useHasCrew,
   });
+}
+
+function useCrewClock() {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const sync = () => {
+      clearInterval(timer);
+      if (!document.hidden) {
+        setNow(Date.now());
+        timer = setInterval(() => setNow(Date.now()), 1000);
+      }
+    };
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => { clearInterval(timer); document.removeEventListener("visibilitychange", sync); };
+  }, []);
+  return now;
 }

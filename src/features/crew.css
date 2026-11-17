@@ -1,1 +1,32 @@
-/* Styles for the Crew tab and segment. Shared rows, groups and buttons live in app.css. */
+.pl-crew { gap: 12px; padding: 16px 10px; }
+.pl-crew-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pl-crew-providers { display: flex; align-items: center; padding-left: 4px; }
+.pl-crew-providers > span { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; margin-left: -4px; box-sizing: content-box; border: 2px solid var(--background); background: var(--card); }
+.pl-crew-providers small { font-size: 11px; color: var(--muted-foreground); margin-left: 4px; }
+.pl-crew .pl-crew-stats { font-size: 12px; gap: 12px; margin-top: 8px; }
+.pl-crew .pl-crew-progress { height: 3px; gap: 2px; }
+.pl-crew-progress > span { border-radius: 3px; }
+.pl-crew-progress > [data-bucket="running"] { animation: pl-crew-pulse 1.6s ease-in-out infinite alternate; }
+.pl-crew-filters { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 6px; }
+.pl-crew-filters .pl-chip { padding: 0 8px; font-size: 11px; }
+.pl-crew-filters .pl-chip span { margin-left: 3px; opacity: .65; font-variant-numeric: tabular-nums; }
+.pl-crew .pl-chip[data-selected] { background: var(--state-active); color: var(--foreground); border-color: var(--input); }
+.pl-crew-entry { display: flex; min-width: 0; }
+.pl-crew-entry .pl-row { flex: 1; min-width: 0; align-items: center; padding: 8px 6px; }
+.pl-crew-entry .pl-row-title { font-weight: 450; }
+.pl-crew-entry[data-working] .pl-row-title { font-weight: 500; }
+.pl-crew-entry .pl-row-meta { display: none; }
+.pl-crew-entry .pl-row-title-line { gap: 6px; }
+.pl-crew-entry .pl-row-time { font-size: 11px; }
+.pl-crew-entry[data-needs] .pl-row-time::before { content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 5px; border-radius: 50%; background: var(--warning); opacity: .6; }
+.pl-crew-guide { width: 18px; flex: none; position: relative; }
+.pl-crew-guide::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.pl-crew-next { width: 100%; height: auto; min-height: 32px; white-space: normal; font-size: 12px; background: transparent; }
+.pl-crew-next:hover { background: var(--state-hover); }
+.pl-crew button:focus-visible, .pl-segment:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@keyframes pl-crew-pulse { from { opacity: 1; } to { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .pl-crew-progress > [data-bucket="running"] { animation: none; } }
+.pl-crew-entry .pl-row-main { flex-direction: row; align-items: center; gap: 6px; }
+.pl-crew-entry .pl-row-title-line { min-width: 0; }
+.pl-crew-entry .pl-row-meta { display: flex; flex: none; }
+.pl-crew-entry .pl-meta-item { display: none; }
