@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { PluginSidebarThread } from "@get-bb/plugin-sdk/app";
 import { bucketOf, childrenByParent, compactAge, descendants, groupThreads, meaningfulBranch, statusPhrase } from "./model";
-import { parsePrefs, DEFAULT_PREFS } from "./prefs";
+import { cycle, parsePrefs, DEFAULT_PREFS, PALETTES } from "./prefs";
+import { nextNeedingYou } from "./model";
 
 const NOW = Date.UTC(2026, 10, 16, 12, 0, 0);
 const MIN = 60_000;
@@ -113,6 +114,33 @@ describe("parsePrefs", () => {
   it("falls back on bad input", () => {
     expect(parsePrefs(null)).toEqual(DEFAULT_PREFS);
     expect(parsePrefs("{nope")).toEqual(DEFAULT_PREFS);
-    expect(parsePrefs(JSON.stringify({ layout: "flat", accent: "pink" }))).toEqual({ ...DEFAULT_PREFS, layout: "flat" });
+    expect(parsePrefs(JSON.stringify({ layout: "flat", accent: "pink", island: "yes" }))).toEqual({ ...DEFAULT_PREFS, layout: "flat" });
+    expect(parsePrefs(JSON.stringify({ palette: "amp", island: false })).palette).toBe("amp");
+    expect(parsePrefs(JSON.stringify({ palette: "amp", island: false })).island).toBe(false);
+  });
+});
+
+describe("cycle", () => {
+  it("wraps", () => {
+    expect(cycle(PALETTES, "flexoki")).toBe("capy");
+    expect(cycle(PALETTES, "capy")).toBe("conductor");
+  });
+});
+
+describe("nextNeedingYou", () => {
+  const waiting = [
+    thread("late", { hasPendingInteraction: true, latestAttentionAt: NOW - 1 * MIN }),
+    thread("early", { hasPendingInteraction: true, latestAttentionAt: NOW - 9 * MIN }),
+    thread("busy", { status: "active" }),
+  ];
+  it("starts with the thread that has waited longest", () => {
+    expect(nextNeedingYou(waiting, null)?.id).toBe("early");
+  });
+  it("moves past the open thread and wraps", () => {
+    expect(nextNeedingYou(waiting, "early")?.id).toBe("late");
+    expect(nextNeedingYou(waiting, "late")?.id).toBe("early");
+  });
+  it("returns null when nothing waits", () => {
+    expect(nextNeedingYou([thread("a")], null)).toBeNull();
   });
 });

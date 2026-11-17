@@ -133,3 +133,23 @@ export function meaningfulBranch(branch: string | null | undefined): string | nu
   if (/thr_[a-z0-9]+$/i.test(branch)) return null;
   return branch;
 }
+
+/** Threads waiting on the user, the longest-waiting first. */
+export function waitingOnYou(threads: readonly PluginSidebarThread[]): PluginSidebarThread[] {
+  return threads
+    .filter((thread) => !thread.isArchived && !thread.isHidden && needsYou(thread))
+    .sort((a, b) => lastActive(a) - lastActive(b));
+}
+
+/** The next thread to visit after the open one, wrapping round. */
+export function nextNeedingYou(
+  threads: readonly PluginSidebarThread[],
+  currentThreadId: string | null,
+): PluginSidebarThread | null {
+  const waiting = waitingOnYou(threads);
+  if (waiting.length === 0) return null;
+  const index = waiting.findIndex((thread) => thread.id === currentThreadId);
+  if (index === -1) return waiting[0] ?? null;
+  if (waiting.length === 1) return waiting[0] ?? null;
+  return waiting[(index + 1) % waiting.length] ?? null;
+}

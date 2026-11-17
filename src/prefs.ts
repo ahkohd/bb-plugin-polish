@@ -5,23 +5,30 @@ import { useSyncExternalStore } from "react";
 
 export type Layout = "inset" | "flat";
 export type Density = "comfortable" | "compact";
-export type Accent = "blue" | "graphite" | "violet" | "green" | "orange";
+export type Accent = "auto" | "blue" | "graphite" | "violet" | "green" | "orange";
+export type Palette = "capy" | "conductor" | "amp" | "flexoki";
 
 export interface PolishPrefs {
+  palette: Palette;
   layout: Layout;
   density: Density;
   accent: Accent;
+  /** The floating pill that shows threads waiting on you. */
+  island: boolean;
 }
 
 export const DEFAULT_PREFS: PolishPrefs = {
+  palette: "capy",
   layout: "inset",
   density: "comfortable",
-  accent: "blue",
+  accent: "auto",
+  island: true,
 };
 
+export const PALETTES: readonly Palette[] = ["capy", "conductor", "amp", "flexoki"];
 export const LAYOUTS: readonly Layout[] = ["inset", "flat"];
 export const DENSITIES: readonly Density[] = ["comfortable", "compact"];
-export const ACCENTS: readonly Accent[] = ["blue", "graphite", "violet", "green", "orange"];
+export const ACCENTS: readonly Accent[] = ["auto", "blue", "graphite", "violet", "green", "orange"];
 
 const STORAGE_KEY = "polish.prefs.v1";
 const CHANGE_EVENT = "polish:prefs";
@@ -44,9 +51,11 @@ export function parsePrefs(raw: string | null): PolishPrefs {
   if (typeof value !== "object" || value === null) return DEFAULT_PREFS;
   const record = value as Record<string, unknown>;
   return {
+    palette: pick(record.palette, PALETTES, DEFAULT_PREFS.palette),
     layout: pick(record.layout, LAYOUTS, DEFAULT_PREFS.layout),
     density: pick(record.density, DENSITIES, DEFAULT_PREFS.density),
     accent: pick(record.accent, ACCENTS, DEFAULT_PREFS.accent),
+    island: typeof record.island === "boolean" ? record.island : DEFAULT_PREFS.island,
   };
 }
 
@@ -98,12 +107,14 @@ export function usePrefs(): [PolishPrefs, (patch: Partial<PolishPrefs>) => void]
 }
 
 const ATTRIBUTES = {
+  palette: "data-polish-palette",
   layout: "data-polish-layout",
   density: "data-polish-density",
   accent: "data-polish-accent",
 } as const;
 
 export function applyPrefs(prefs: PolishPrefs, root: HTMLElement): void {
+  root.setAttribute(ATTRIBUTES.palette, prefs.palette);
   root.setAttribute(ATTRIBUTES.layout, prefs.layout);
   root.setAttribute(ATTRIBUTES.density, prefs.density);
   root.setAttribute(ATTRIBUTES.accent, prefs.accent);
@@ -111,4 +122,10 @@ export function applyPrefs(prefs: PolishPrefs, root: HTMLElement): void {
 
 export function clearPrefs(root: HTMLElement): void {
   for (const name of Object.values(ATTRIBUTES)) root.removeAttribute(name);
+}
+
+/** The next value in a list, wrapping around. */
+export function cycle<T>(list: readonly T[], current: T): T {
+  const index = list.indexOf(current);
+  return list[(index + 1) % list.length] as T;
 }

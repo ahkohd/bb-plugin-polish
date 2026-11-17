@@ -3,12 +3,30 @@
 //   recently, with a badge for the ones that need you;
 // - a short Needs you / In progress list on the New thread page;
 // - Crew: a tab beside any thread that started other threads;
-// - Polish settings (layout, density, accent), applied by a content script.
+// - a Crew segment in the context row above the composer;
+// - the needs-you pill, floating at the top of the window;
+// - commands to jump to the next thread that needs you, open Overview and
+//   switch palette, layout, density and accent;
+// - Polish settings (palette, layout, density, accent, pill), applied by a
+//   content script.
 import { definePluginApp } from "@get-bb/plugin-sdk/app";
-import { CrewTab, useHasCrew } from "./src/Crew";
+import { CrewSegmentDetails, CrewSegmentSummary, CrewTab, useHasCrew } from "./src/Crew";
+import { bridge, currentThreadId, NeedsYouIsland } from "./src/Island";
+import { nextNeedingYou } from "./src/model";
 import { HomeSection, OverviewPage, OVERVIEW_PATH, useNeedsYouBadge } from "./src/Overview";
 import { PolishSettings } from "./src/Settings";
-import { applyPrefs, clearPrefs, readPrefs, subscribePrefs } from "./src/prefs";
+import {
+  ACCENTS,
+  DENSITIES,
+  LAYOUTS,
+  PALETTES,
+  applyPrefs,
+  clearPrefs,
+  cycle,
+  readPrefs,
+  subscribePrefs,
+  writePrefs,
+} from "./src/prefs";
 import "./app.css";
 
 function OverviewIcon({ className }: { className?: string }) {
@@ -77,10 +95,69 @@ export default definePluginApp((app) => {
     component: CrewTab,
   });
 
+  app.slots.experimental_threadContextSegment({
+    id: "crew",
+    title: "Crew",
+    group: "2_crew",
+    summary: CrewSegmentSummary,
+    details: CrewSegmentDetails,
+    useVisible: useHasCrew,
+  });
+
+  app.slots.experimental_appOverlay({ id: "needs-you", component: NeedsYouIsland });
+
+  app.commands.register({
+    id: "next-needs-you",
+    title: "Polish: Go to the next thread that needs you",
+    defaultShortcut: { key: "j", mod: true, alt: true },
+    run: ({ threadId }) => {
+      const next = nextNeedingYou(bridge.threads, threadId ?? currentThreadId());
+      if (next && bridge.navigate) bridge.navigate.toThread(next.id);
+    },
+  });
+  app.commands.register({
+    id: "overview",
+    title: "Polish: Open Overview",
+    defaultShortcut: { key: "o", mod: true, alt: true },
+    run: () => bridge.navigate?.toPluginPanel(OVERVIEW_PATH),
+  });
+  app.commands.register({
+    id: "cycle-palette",
+    title: "Polish: Next palette",
+    run: () => {
+      const prefs = readPrefs();
+      writePrefs({ ...prefs, palette: cycle(PALETTES, prefs.palette) });
+    },
+  });
+  app.commands.register({
+    id: "toggle-layout",
+    title: "Polish: Toggle inset panel",
+    run: () => {
+      const prefs = readPrefs();
+      writePrefs({ ...prefs, layout: cycle(LAYOUTS, prefs.layout) });
+    },
+  });
+  app.commands.register({
+    id: "toggle-density",
+    title: "Polish: Toggle compact density",
+    run: () => {
+      const prefs = readPrefs();
+      writePrefs({ ...prefs, density: cycle(DENSITIES, prefs.density) });
+    },
+  });
+  app.commands.register({
+    id: "cycle-accent",
+    title: "Polish: Next accent colour",
+    run: () => {
+      const prefs = readPrefs();
+      writePrefs({ ...prefs, accent: cycle(ACCENTS, prefs.accent) });
+    },
+  });
+
   app.slots.settingsSection({
     id: "appearance",
     title: "Appearance",
-    description: "Layout, density and accent for the Polish theme.",
+    description: "Palette, layout, density and accent for the Polish theme.",
     component: PolishSettings,
   });
 });

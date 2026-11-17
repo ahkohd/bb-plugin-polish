@@ -25,8 +25,8 @@
   --cp-fill: #ededee;           /* user message, chips */
   --cp-selected: #e5e5e7;       /* selected row */
   --cp-text: #1e1e1e;
-  --cp-text-2: color-mix(in oklch, var(--cp-text) 62%, #ececec);
-  --cp-text-3: color-mix(in oklch, var(--cp-text) 48%, #ececec);
+  --cp-text-2: color-mix(in oklab, var(--cp-text) 62%, var(--cp-frame));
+  --cp-text-3: color-mix(in oklab, var(--cp-text) 48%, var(--cp-frame));
   --cp-line: rgb(0 0 0 / 0.08);
   --cp-line-2: rgb(0 0 0 / 0.11);
   --cp-line-3: rgb(0 0 0 / 0.15);
@@ -54,8 +54,8 @@
   --cp-fill: #222224;
   --cp-selected: #242426;
   --cp-text: #f5f5f5;
-  --cp-text-2: color-mix(in oklch, var(--cp-text) 68%, #0a0a0b);
-  --cp-text-3: color-mix(in oklch, var(--cp-text) 52%, #0a0a0b);
+  --cp-text-2: color-mix(in oklab, var(--cp-text) 68%, var(--cp-frame));
+  --cp-text-3: color-mix(in oklab, var(--cp-text) 52%, var(--cp-frame));
   --cp-line: rgb(255 255 255 / 0.08);
   --cp-line-2: rgb(255 255 255 / 0.12);
   --cp-line-3: rgb(255 255 255 / 0.16);
@@ -74,15 +74,57 @@
   --pl-link: #8aa4ff;
 }
 
+/* ---------- Palettes ---------- */
+/* Capy is the default above. The others reuse the same roles. */
+html[data-polish-palette="conductor"] {
+  --cp-frame: #f5f5f3; --cp-panel: #ffffff; --cp-card: #ffffff; --cp-fill: #f0efec; --cp-selected: #e9e8e4;
+  --cp-text: #191919;
+  --pl-accent: #1f883d; --pl-accent-fg: #ffffff; --pl-link: #1a7f37;
+}
+html.dark[data-polish-palette="conductor"] {
+  --cp-frame: #000000; --cp-panel: #0f0f0f; --cp-card: #161616; --cp-fill: #261f1f; --cp-selected: #1c1c1c;
+  --cp-text: #ececec;
+  --pl-accent: #3fb950; --pl-accent-fg: #06120a; --pl-link: #6cc77a;
+}
+html[data-polish-palette="amp"] {
+  --cp-frame: #efece6; --cp-panel: #faf8f4; --cp-card: #fffdf9; --cp-fill: #ece7de; --cp-selected: #e4ded3;
+  --cp-text: #1d1a17;
+  --cp-line: rgb(60 40 20 / 0.1); --cp-line-2: rgb(60 40 20 / 0.14); --cp-line-3: rgb(60 40 20 / 0.2);
+  --pl-accent: #f26b1d; --pl-accent-fg: #ffffff; --pl-link: #c2500f;
+}
+html.dark[data-polish-palette="amp"] {
+  --cp-frame: #061214; --cp-panel: #0b1b1e; --cp-card: #102428; --cp-fill: #15302f; --cp-selected: #163438;
+  --cp-text: #dbe4e3;
+  --cp-line: rgb(190 255 245 / 0.08); --cp-line-2: rgb(190 255 245 / 0.12); --cp-line-3: rgb(190 255 245 / 0.17);
+  --cp-hover: rgb(190 255 245 / 0.05); --cp-active: rgb(190 255 245 / 0.08);
+  --pl-accent: #ff7a2f; --pl-accent-fg: #1a0b02; --pl-link: #ffa86b;
+}
+html[data-polish-palette="flexoki"] {
+  --cp-frame: #f2f0e5; --cp-panel: #fffcf0; --cp-card: #fffcf0; --cp-fill: #e6e4d9; --cp-selected: #dad8ce;
+  --cp-text: #100f0f;
+  --cp-line: rgb(16 15 15 / 0.09); --cp-line-2: rgb(16 15 15 / 0.13); --cp-line-3: rgb(16 15 15 / 0.19);
+  --pl-accent: #bc5215; --pl-accent-fg: #fffcf0; --pl-link: #205ea6;
+}
+html.dark[data-polish-palette="flexoki"] {
+  --cp-frame: #100f0f; --cp-panel: #1c1b1a; --cp-card: #232221; --cp-fill: #282726; --cp-selected: #343331;
+  --cp-text: #cecdc3;
+  --cp-line: rgb(206 205 195 / 0.09); --cp-line-2: rgb(206 205 195 / 0.13); --cp-line-3: rgb(206 205 195 / 0.18);
+  --cp-hover: rgb(206 205 195 / 0.05); --cp-active: rgb(206 205 195 / 0.08);
+  --pl-accent: #da702c; --pl-accent-fg: #100f0f; --pl-link: #4385be;
+}
+
 /* ---------- Accents ---------- */
+/* "auto" keeps the palette's own accent, so it has no rule. */
 html[data-polish-accent="graphite"] { --pl-accent: #1e1e1e; --pl-accent-fg: #ffffff; --pl-link: #1e1e1e; }
 html.dark[data-polish-accent="graphite"] { --pl-accent: #f5f5f5; --pl-accent-fg: #0a0a0b; --pl-link: #f5f5f5; }
 html[data-polish-accent="violet"] { --pl-accent: #6e4fd8; --pl-accent-fg: #ffffff; --pl-link: #5636c0; }
-html.dark[data-polish-accent="violet"] { --pl-accent: #8b72f0; --pl-link: #b3a3ff; }
+html.dark[data-polish-accent="violet"] { --pl-accent: #8b72f0; --pl-accent-fg: #ffffff; --pl-link: #b3a3ff; }
 html[data-polish-accent="green"] { --pl-accent: #1a7f45; --pl-accent-fg: #ffffff; --pl-link: #146a39; }
-html.dark[data-polish-accent="green"] { --pl-accent: #2fa866; --pl-link: #6fd49a; }
+html.dark[data-polish-accent="green"] { --pl-accent: #2fa866; --pl-accent-fg: #ffffff; --pl-link: #6fd49a; }
 html[data-polish-accent="orange"] { --pl-accent: #d4561c; --pl-accent-fg: #ffffff; --pl-link: #b0440f; }
-html.dark[data-polish-accent="orange"] { --pl-accent: #ee7a3f; --pl-link: #f5a070; }
+html.dark[data-polish-accent="orange"] { --pl-accent: #ee7a3f; --pl-accent-fg: #ffffff; --pl-link: #f5a070; }
+html[data-polish-accent="blue"] { --pl-accent: #3b5de8; --pl-accent-fg: #ffffff; --pl-link: #2a44af; }
+html.dark[data-polish-accent="blue"] { --pl-accent: #456af6; --pl-accent-fg: #ffffff; --pl-link: #8aa4ff; }
 
 /* ---------- Roles onto bb tokens (both modes) ---------- */
 :root, .light, .dark {
@@ -123,7 +165,7 @@ html.dark[data-polish-accent="orange"] { --pl-accent: #ee7a3f; --pl-link: #f5a07
   --border-seam: var(--cp-line);
   --border-seam-vertical: var(--cp-line);
   --input: var(--cp-line-2);
-  --ring: color-mix(in oklch, var(--pl-accent) 50%, transparent);
+  --ring: color-mix(in oklab, var(--pl-accent) 50%, transparent);
 
   --state-hover: var(--cp-hover);
   --state-active: var(--cp-active);
@@ -195,7 +237,7 @@ body.bb-app-shell {
   text-rendering: optimizeLegibility;
 }
 ::selection {
-  background: color-mix(in oklch, var(--pl-accent) 22%, transparent);
+  background: color-mix(in oklab, var(--pl-accent) 22%, transparent);
 }
 
 /* ---------- Layout: grey window, main area on a rounded panel ---------- */
@@ -296,7 +338,7 @@ html[data-polish-density="compact"] [data-markdown-preview] {
   border-radius: 8px;
 }
 [data-promptbox-submit-action]:hover {
-  background: color-mix(in oklch, var(--pl-accent) 88%, black);
+  background: color-mix(in oklab, var(--pl-accent) 88%, black);
 }
 /* Switches: the accent when on. */
 [role="switch"][data-state="checked"] {
@@ -361,6 +403,58 @@ html[data-polish-density="compact"] [data-markdown-preview] {
 }
 [data-markdown-preview] tr:last-child td {
   border-bottom: 0 !important;
+}
+
+/* Conductor marks the open thread with a thin accent bar. */
+html[data-polish-palette="conductor"] [data-sidebar-rename-row].bg-state-active,
+html[data-polish-palette="conductor"] .bb-sidebar-selected-row {
+  box-shadow: inset 2px 0 0 var(--pl-accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* ---------- Transcript typography ---------- */
+[data-markdown-preview] h1,
+[data-markdown-preview] h2,
+[data-markdown-preview] h3 {
+  font-weight: 560;
+  letter-spacing: -0.01em;
+}
+[data-markdown-preview] h2 {
+  margin-top: 1.4rem;
+}
+[data-markdown-preview] strong {
+  font-weight: 600;
+}
+[data-markdown-preview] li::marker {
+  color: var(--cp-text-3);
+}
+[data-markdown-preview] blockquote {
+  margin: 0.6rem 0;
+  padding: 0.1rem 0 0.1rem 0.9rem;
+  border-left: 2px solid var(--cp-line-3);
+  color: var(--cp-text-2);
+}
+[data-markdown-preview] hr {
+  border: 0;
+  border-top: 1px solid var(--cp-line);
+  margin: 1.25rem 0;
+}
+
+/* Code blocks: a rounded card with a quiet header. */
+[data-markdown-preview] div:has(> pre.bb-code-highlight) {
+  border-radius: 10px;
+  border-color: var(--cp-line);
+  background: color-mix(in oklab, var(--cp-frame) 60%, var(--cp-panel));
+}
+[data-markdown-preview] div:has(> pre.bb-code-highlight) > [data-clipboard-ignore] {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+[data-markdown-preview] div:has(> pre.bb-code-highlight):hover > [data-clipboard-ignore] {
+  opacity: 1;
+}
+[data-markdown-preview] pre.bb-code-highlight code {
+  line-height: 1.6;
 }
 
 /* ---------- Composer: a white card with a hairline ---------- */

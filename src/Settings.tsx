@@ -1,6 +1,6 @@
 // Polish's settings: layout, density and accent, saved on this device.
 import type { ReactNode } from "react";
-import { ACCENTS, type Accent, type Density, type Layout, usePrefs } from "./prefs";
+import { ACCENTS, type Accent, type Density, type Layout, type Palette, usePrefs } from "./prefs";
 
 function Segmented<T extends string>(props: {
   label: string;
@@ -26,6 +26,13 @@ function Segmented<T extends string>(props: {
   );
 }
 
+const PALETTE_OPTIONS: readonly { value: Palette; label: string }[] = [
+  { value: "capy", label: "Capy" },
+  { value: "conductor", label: "Conductor" },
+  { value: "amp", label: "Amp" },
+  { value: "flexoki", label: "Flexoki" },
+];
+
 function Field(props: { label: string; hint: string; children: ReactNode }) {
   return (
     <div className="pl-field">
@@ -39,6 +46,7 @@ function Field(props: { label: string; hint: string; children: ReactNode }) {
 }
 
 const ACCENT_NAMES: Record<Accent, string> = {
+  auto: "The palette's own",
   blue: "Blue",
   graphite: "Graphite",
   violet: "Violet",
@@ -50,6 +58,27 @@ export function PolishSettings() {
   const [prefs, update] = usePrefs();
   return (
     <div className="pl-settings">
+      <Field label="Palette" hint="Capy's cool greys, Conductor's black and green, Amp's deep teal and orange, or Flexoki's ink on paper.">
+        <div className="pl-palettes" role="radiogroup" aria-label="Palette">
+          {PALETTE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={prefs.palette === option.value}
+              data-selected={prefs.palette === option.value || undefined}
+              className="pl-palette"
+              data-palette={option.value}
+              onClick={() => update({ palette: option.value })}
+            >
+              <span className="pl-palette-preview" aria-hidden="true">
+                <span /><span /><span />
+              </span>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </Field>
       <Field label="Layout" hint="Inset puts the main area on a rounded panel beside the sidebar, as Capy does.">
         <Segmented<Layout>
           label="Layout"
@@ -84,8 +113,21 @@ export function PolishSettings() {
           ))}
         </div>
       </Field>
+      <Field label="Needs-you pill" hint="A small pill at the top of the window while a thread waits on you. Click it to jump there.">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={prefs.island}
+          data-state={prefs.island ? "checked" : "unchecked"}
+          className="pl-switch"
+          onClick={() => update({ island: !prefs.island })}
+        >
+          <span />
+        </button>
+      </Field>
       <p className="pl-settings-note">
         These apply while the Polish theme is on (Settings, Appearance) and are saved on this device only.
+        Commands for all of them are in the command palette.
       </p>
     </div>
   );
