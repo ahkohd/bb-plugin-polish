@@ -1,8 +1,12 @@
 // The Overview page: every thread that needs you, is working, is ready for
 // review or ran recently, in Capy's grouped style, and the badge on its
 // navigation item.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ThreadChat,
+  experimental_ProviderIcon as ProviderIcon,
+  experimental_ThreadStatusGlyph as ThreadStatusGlyph,
+  useSidebarThreadRowStatus,
   experimental_useSidebarThreads as useSidebarThreads,
   useBbNavigate,
   type ExperimentalBadge,
@@ -12,15 +16,15 @@ import {
 import {
   BUCKET_LABELS,
   BUCKET_ORDER,
-  childrenByParent,
+  childrenByParent, compactAge, lastActive, meaningfulBranch, statusPhrase, isBusy,
   groupThreads,
   needsYou,
   type Bucket,
 } from "../model";
-import { EmptyNote, Group, ThreadRow, useNow, useProjectLookup } from "../ui";
+import { EmptyNote, useNow, useProjectLookup, useProviderLookup } from "../ui";
 import "./overview.css";
+import { matchesFilter, moveSelection } from "./overview-model";
 
-const RECENT_PAGE = 12;
 
 export const OVERVIEW_PATH = "overview";
 
@@ -49,108 +53,116 @@ function Summary({ counts }: { counts: Record<Bucket, number> }) {
   );
 }
 
+function remembered(key: string, fallback: string): string {
+  try { return localStorage.getItem(`polish.overview.${key}`) ?? fallback; } catch { return fallback; }
+}
+
+function Glyph({ thread }: { thread: PluginSidebarThread }) {
+  const rowStatus = useSidebarThreadRowStatus(thread.id);
+  return <span className="pl-glyph"><ThreadStatusGlyph indicator={thread.indicator} rowStatus={rowStatus} size="compact" hideIdleDraftLabel /></span>;
+}
+
 export function OverviewPage() {
   const { status, threads, projects } = useSidebarThreads();
   const now = useNow();
   const navigate = useBbNavigate();
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [recentLimit, setRecentLimit] = useState(RECENT_PAGE);
+  const [query, setQuery] = useState("");
+  const [view, setView] = useState(() => remembered("view", "list") === "board" ? "board" : "list");
+  const [peek, setPeek] = useState(() => remembered("peek", "off") === "on");
+  const [wide, setWide] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const root = useRef<HTMLDivElement>(null);
+  const filter = useRef<HTMLInputElement>(null);
+  const suppressChatAutofocus = useRef(true);
   const projectLookup = useProjectLookup(projects);
+  const providers = useProviderLookup();
   const children = useMemo(() => childrenByParent(threads), [threads]);
-  const byId = useMemo(() => new Map(threads.map((thread) => [thread.id, thread])), [threads]);
   const groups = useMemo(() => groupThreads(threads, now, projectId), [threads, now, projectId]);
-
-  const activeProjects = useMemo(() => {
-    const ids = new Set(threads.filter((thread) => !thread.isArchived && !thread.isHidden).map((thread) => thread.projectId));
-    return projects.filter((project) => ids.has(project.id));
-  }, [threads, projects]);
-
-  const counts = {
-    needs: groups.needs.length,
-    running: groups.running.length,
-    ready: groups.ready.length,
-    recent: groups.recent.length,
+  const visible = BUCKET_ORDER.map(bucket => ({ bucket, list: groups[bucket].filter(thread => matchesFilter(thread, projectLookup.get(thread.projectId)?.name ?? "", query)) }));
+  const ids = visible.flatMap(group => group.list.map(thread => thread.id));
+  const selected = threads.find(thread => thread.id === selectedId && ids.includes(thread.id));
+  const split = peek && wide;
+  const activeProjects = projects.filter(project => threads.some(thread => thread.projectId === project.id && !thread.isArchived && !thread.isHidden));
+  const counts = { needs: groups.needs.length, running: groups.running.length, ready: groups.ready.length, recent: groups.recent.length };
+  useEffect(() => {
+    const observer = new ResizeObserver(entries => setWide((entries[0]?.contentRect.width ?? 0) >= 1180));
+    if (root.current) observer.observe(root.current);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => { try { localStorage.setItem("polish.overview.view", view); localStorage.setItem("polish.overview.peek", peek ? "on" : "off"); } catch { /* Storage may be unavailable. */ } }, [view, peek]);
+  useEffect(() => { if (selectedId && !ids.includes(selectedId)) setSelectedId(null); }, [ids.join("|"), selectedId]);
+  useEffect(() => {
+    suppressChatAutofocus.current = true;
+    if (selectedId) root.current?.querySelector(`[data-thread-id="${selectedId}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [selectedId, view, split]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Tab") suppressChatAutofocus.current = false;
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.target instanceof Element && event.target.closest('input, textarea, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')) return;
+      if (["j", "k", "ArrowDown", "ArrowUp"].includes(event.key)) {
+        event.preventDefault(); event.stopImmediatePropagation(); setSelectedId(moveSelection(ids, selectedId, event.key === "j" || event.key === "ArrowDown" ? 1 : -1));
+      } else if (event.key === "Enter" && selected) { event.preventDefault(); event.stopImmediatePropagation(); navigate.toThread(selected.id); }
+      else if (event.key === "Escape") { event.stopImmediatePropagation(); setSelectedId(null); }
+      else if (event.key === "/") { event.preventDefault(); event.stopImmediatePropagation(); filter.current?.focus(); }
+      else if (event.key === "b") { event.stopImmediatePropagation(); setView(value => value === "list" ? "board" : "list"); }
+      else if (event.key === "p") { event.stopImmediatePropagation(); setPeek(value => !value); }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  });
+  const renderThread = (thread: PluginSidebarThread) => {
+    const provider = providers.get(thread.providerId);
+    const branch = meaningfulBranch(thread.environment?.branchName);
+    const subs = children.get(thread.id) ?? [];
+    return <a key={thread.id} href={thread.href} className={view === "board" ? "pl-overview-card" : "pl-row"} data-thread-id={thread.id} data-selected={selectedId === thread.id || undefined} data-unread={thread.isUnread || undefined}
+      onClick={event => { if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); if (split) setSelectedId(thread.id); else navigate.toThread(thread.id); }}
+      onDoubleClick={event => { event.preventDefault(); navigate.toThread(thread.id); }}>
+      {view === "list" ? <Glyph thread={thread} /> : null}
+      <span className="pl-row-main">
+        <span className="pl-row-title">{thread.displayTitle}</span>
+        <span className="pl-row-meta">
+          {provider ? <ProviderIcon providerKind="agent" provider={provider} className="pl-provider-icon" aria-hidden /> : null}
+          <span className="pl-meta-item">{projectLookup.get(thread.projectId)?.name ?? "Personal"}</span>
+          {branch ? <span className="pl-meta-item pl-mono">{branch}</span> : null}
+          {subs.length ? <span className="pl-segment-dots" aria-label={`${subs.length} subthreads`}>{subs.slice(0, 8).map(child => <span key={child.id} data-bucket={needsYou(child) ? "needs" : isBusy(child) ? "running" : "ready"} />)}</span> : null}
+        </span>
+      </span>
+      {view === "board" ? <span className="pl-overview-card-footer"><span><Glyph thread={thread} />{statusPhrase(thread) ?? "Idle"}</span><span>{compactAge(lastActive(thread), now)}</span></span> : <span className="pl-row-time">{compactAge(lastActive(thread), now)}</span>}
+    </a>;
   };
-
-  const renderRows = (list: PluginSidebarThread[]) =>
-    list.map((thread) => (
-      <ThreadRow
-        key={thread.id}
-        thread={thread}
-        now={now}
-        project={projectLookup.get(thread.projectId)}
-        parent={thread.parentThreadId ? byId.get(thread.parentThreadId) : undefined}
-        childCount={children.get(thread.id)?.length}
-        showProject={projectId === null}
-      />
-    ));
-
-  return (
-    <div className="pl-page">
-      <div className="pl-page-inner">
-        <header className="pl-hero">
-          <div>
-            <h1 className="pl-hero-title">{greeting(now)}</h1>
-            <Summary counts={counts} />
-          </div>
-          <button type="button" className="pl-button pl-button-primary" onClick={() => navigate.toCompose({ projectId: projectId ?? undefined, focusPrompt: true })}>
-            New thread
-          </button>
-        </header>
-
-        {activeProjects.length > 1 ? (
-          <nav className="pl-filter" aria-label="Project">
-            <button type="button" className="pl-chip" data-selected={projectId === null || undefined} onClick={() => setProjectId(null)}>
-              All projects
-            </button>
-            {activeProjects.map((project) => (
-              <button
-                key={project.id}
-                type="button"
-                className="pl-chip"
-                data-selected={projectId === project.id || undefined}
-                onClick={() => setProjectId(project.id)}
-              >
-                {project.isPersonal ? "Personal" : project.name}
-              </button>
-            ))}
-          </nav>
-        ) : null}
-
-        {status === "loading" ? <EmptyNote>Loading threads…</EmptyNote> : null}
-        {status === "error" ? <EmptyNote>Could not load threads.</EmptyNote> : null}
-
-        {status === "ready" && BUCKET_ORDER.every((bucket) => groups[bucket].length === 0) ? (
-          <div className="pl-calm">
-            <p className="pl-calm-title">All quiet</p>
-            <p className="pl-calm-text">Nothing needs you and nothing is running. Start a thread to get going.</p>
-          </div>
-        ) : null}
-
-        {BUCKET_ORDER.map((bucket) => {
-          const list = groups[bucket];
-          if (list.length === 0) return null;
-          const shown = bucket === "recent" ? list.slice(0, recentLimit) : list;
-          return (
-            <Group
-              key={bucket}
-              id={`overview.${bucket}`}
-              label={BUCKET_LABELS[bucket]}
-              count={list.length}
-              tone={bucket === "needs" ? "attention" : "neutral"}
-            >
-              {renderRows(shown)}
-              {bucket === "recent" && list.length > shown.length ? (
-                <button type="button" className="pl-more" onClick={() => setRecentLimit((limit) => limit + RECENT_PAGE)}>
-                  Show {Math.min(RECENT_PAGE, list.length - shown.length)} more
-                </button>
-              ) : null}
-            </Group>
-          );
-        })}
+  return <div className="pl-overview" ref={root} tabIndex={-1} data-view={view} data-split={split || undefined}>
+    <header className="pl-overview-top" data-scrolled={scrolled || undefined}>
+      <div className="pl-overview-toolbar"><div><h1 className="pl-hero-title">{greeting(now)}</h1><Summary counts={counts} /></div>
+        <div className="pl-overview-actions">
+          <label className="pl-overview-search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4" /><path d="m10 10 3.5 3.5" /></svg><input ref={filter} aria-label="Filter threads" placeholder="Filter threads" value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); event.stopPropagation(); } }} /></label>
+          <div className="pl-segmented" aria-label="Overview view">{["list", "board"].map(value => <button key={value} type="button" aria-pressed={view === value} data-selected={view === value || undefined} onClick={() => setView(value)}>{value === "list" ? "List" : "Board"}</button>)}</div>
+          <button type="button" className="pl-overview-icon" aria-label="Toggle peek" title="Toggle peek (p)" aria-pressed={peek} onClick={() => setPeek(value => !value)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2" /><path d="M9 3v10" /></svg></button>
+          <button type="button" className="pl-button pl-button-primary" onClick={() => navigate.toCompose({ projectId: projectId ?? undefined, focusPrompt: true })}>New thread</button>
+        </div>
       </div>
+      {activeProjects.length > 1 ? <nav className="pl-filter" aria-label="Project"><button className="pl-chip" data-selected={!projectId || undefined} onClick={() => setProjectId(null)}>All projects</button>{activeProjects.map(project => <button key={project.id} className="pl-chip" data-selected={projectId === project.id || undefined} onClick={() => setProjectId(project.id)}>{project.isPersonal ? "Personal" : project.name}</button>)}</nav> : null}
+    </header>
+    <div className="pl-overview-body">
+      <div className="pl-overview-list" onScrollCapture={event => { if (event.target instanceof HTMLElement) setScrolled(event.target.scrollTop > 0); }}>
+        {status === "loading" ? <EmptyNote>Loading threads...</EmptyNote> : status === "error" ? <EmptyNote>Could not load threads.</EmptyNote> : <>
+          {!ids.length ? query.trim() ? <EmptyNote>No threads match your filter.</EmptyNote> : <div className="pl-calm"><p className="pl-calm-title">All quiet</p><p className="pl-calm-text">Nothing needs you and nothing is running. Start a thread to get going.</p></div> : null}
+          {query.trim() && !ids.length ? null : <div className="pl-overview-groups">{visible.map(({ bucket, list }) => !list.length && view === "list" ? null : <section key={bucket} className="pl-overview-group"><h2>{BUCKET_LABELS[bucket]} <span>{list.length}</span></h2><div className="pl-overview-group-items">{list.length ? list.map(renderThread) : <p className="pl-overview-nothing">Nothing here</p>}</div></section>)}</div>}
+        </>}
+        <p className="pl-overview-legend">j k move · Enter open · p peek · b board · / filter</p>
+      </div>
+      {split ? <aside className="pl-overview-peek" aria-label="Thread peek"
+        onPointerDown={() => { suppressChatAutofocus.current = false; }}
+        onFocusCapture={event => {
+          // The host composer autofocuses on mount; keep triage on the list until the user enters the pane.
+          if (suppressChatAutofocus.current && event.target.closest('[contenteditable], textarea, input')) {
+            root.current?.querySelector<HTMLElement>(`[data-thread-id="${selectedId}"]`)?.focus({ preventScroll: true });
+          }
+        }}>{selected ? <div className="pl-overview-peek-card"><header><div><h2>{selected.displayTitle}</h2><p>{projectLookup.get(selected.projectId)?.name ?? "Personal"}{selected.environment?.branchName ? ` · ${selected.environment.branchName}` : ""}</p></div><button className="pl-button" onClick={() => navigate.toThread(selected.id)}>Open</button><button className="pl-overview-icon" aria-label="Clear selection" onClick={() => setSelectedId(null)}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" /></svg></button></header><div className="pl-overview-chat"><ThreadChat key={selected.id} threadId={selected.id} variant="compact" layout="contained" /></div></div> : <p className="pl-overview-hint">Select a thread to peek. j and k move, Enter opens.</p>}</aside> : null}
     </div>
-  );
+  </div>;
 }
 
 function greeting(now: number): string {
