@@ -25,6 +25,7 @@ import {
 import { InboxRow } from "./InboxRow";
 import { ParkedRow } from "./ParkedRow";
 import { ProjectPicker } from "./ProjectPicker";
+import { ALL_PROJECTS, projectScope, useProjectScope } from "./projectScope";
 import { CompactViewportContext } from "./inlineRename";
 import { SidebarRow, RowAppearanceContext, type ChildToggle } from "./SidebarRow";
 import { ThreadStatus, threadStatusKind } from "./StatusSlot";
@@ -67,7 +68,6 @@ import {
 } from "./inbox";
 import "./sidebar.css";
 
-const ALL_PROJECTS = "__all__";
 
 const ARCHIVE_QUICK_ACTION_KEYS = ["bb--core/archive"] as const;
 
@@ -126,7 +126,13 @@ export function ThreadInbox({
     const timer = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(timer);
   }, []);
-  const [scope, setScope] = useState<string>(ALL_PROJECTS);
+  const { scope, headerMounts } = useProjectScope();
+  const setScope = projectScope.setScope;
+  useEffect(() => {
+    projectScope.setProjects(projects);
+  }, [projects]);
+  // The filter starts at All projects each time the list mounts, as before.
+  useEffect(() => () => projectScope.setScope(ALL_PROJECTS), []);
   const { collapsedShelves, expandedParents, toggleShelf, toggleParent } =
     useSyncedLayout(DEFAULT_LAYOUT);
 
@@ -596,6 +602,7 @@ export function ThreadInbox({
         <RowWindowingContext.Provider value={windowing}>
           <TooltipProvider delayDuration={350}>
             <div className="pl-sb">
+              {headerMounts === 0 ? (
               <div className="pl-sb-list-header">
                 <ProjectPicker
                   value={scope}
@@ -634,6 +641,7 @@ export function ThreadInbox({
                   </div>
                 ) : null}
               </div>
+              ) : null}
 
               <div ref={scrollRef} className="pl-sb-scroll">
                 {status === "loading" || !lifecycle.isReady ? null : status ===

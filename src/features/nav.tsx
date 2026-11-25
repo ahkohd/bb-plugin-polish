@@ -10,6 +10,8 @@ import {
   type PluginAppBuilder,
 } from "@get-bb/plugin-sdk/app";
 import { usePortalScopeProps } from "../sidebar/lib/portal-scope";
+import { ProjectPicker } from "../sidebar/ProjectPicker";
+import { ALL_PROJECTS, projectScope, useProjectScope } from "../sidebar/projectScope";
 import { badgeText, splitNavigation } from "./nav-model";
 import "./nav.css";
 
@@ -56,9 +58,15 @@ function HeaderActionButton({ item, controlSize }: { item: Item; controlSize: nu
   );
 }
 
+// The project filter sits in the header row, beside the sidebar toggle,
+// whenever Polish's thread list is showing and there is room for it.
+const HEADER_PICKER_MIN_WIDTH = 72;
+
 function HeaderControls({ width, controlSize }: ExperimentalSidebarHeaderProps) {
   const { items } = useNavigation();
   const { search, newThread } = splitNavigation(items);
+  const { scope, projects } = useProjectScope();
+  useEffect(() => projectScope.mountHeader(), []);
 
   if (width < controlSize) return null;
 
@@ -66,11 +74,24 @@ function HeaderControls({ width, controlSize }: ExperimentalSidebarHeaderProps) 
   const shown: Item[] = [];
   if (search && (canFitTwo || !newThread)) shown.push(search);
   if (newThread) shown.push(newThread);
-  if (shown.length === 0) return null;
+  const buttonsWidth = shown.length * controlSize + Math.max(0, shown.length - 1) * 4;
+  const showPicker = projects.length > 0 && width - buttonsWidth - 8 >= HEADER_PICKER_MIN_WIDTH;
+  if (shown.length === 0 && !showPicker) return null;
 
   return (
     <TooltipPrimitive.Provider delayDuration={350} disableHoverableContent>
       <div className="pl-nav-header">
+        {showPicker ? (
+          <div className="pl-nav-header-scope">
+            <ProjectPicker
+              value={scope}
+              allValue={ALL_PROJECTS}
+              allLabel="All projects"
+              projects={projects}
+              onChange={projectScope.setScope}
+            />
+          </div>
+        ) : null}
         {shown.map((item) => (
           <HeaderActionButton key={item.id} item={item} controlSize={controlSize} />
         ))}
