@@ -28,8 +28,9 @@ Switch back with `bb theme reset`.
 ## Pages and pieces
 
 - **Sidebar inbox**: a thread list that never re-orders. Threads stay in the
-  order you started them, with their project, status or age at the end of
-  each row and children under a guide line. Snooze, settle or mute a thread
+  order you started them. Each row shows its status on the left (a spinner,
+  a yellow dot when it needs you, an accent dot when unread) and its project
+  and age on the right, with children under a guide line. Snooze, settle or mute a thread
   and it moves to a shelf docked at the bottom of the sidebar; it comes back
   when it finishes, fails or asks you something. Pick it in Settings,
   Appearance, Thread list. This is
@@ -42,8 +43,9 @@ Switch back with `bb theme reset`.
   by project.
 - **New thread page**: a pulse line with a 14-day sparkline, your projects,
   four starters, and what needs you.
-- **Polish dock**: a compact sidebar navigation: a New thread button and one
-  row of icons. Pick it in Settings, Appearance, Navigation.
+- **Polish dock**: a compact sidebar navigation: Search and New thread as
+  icons in the sidebar's top row, and labelled rows for the rest. Pick it in
+  Settings, Appearance, Navigation.
 - **Crew**: a tab beside any thread that started other threads, with filters,
   live timers and a progress bar.
 - **Needs-you pill**: shows while any thread waits on you; click to jump to
