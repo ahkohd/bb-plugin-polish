@@ -1,9 +1,6 @@
-import {
-  experimental_ThreadStatusGlyph as ThreadStatusGlyph,
-  type PluginSidebarThread,
-} from "@get-bb/plugin-sdk/app";
+import type { PluginSidebarThread } from "@get-bb/plugin-sdk/app";
 import { SidebarRow, type ChildToggle } from "./SidebarRow";
-import { ThreadStatus } from "./StatusSlot";
+import { ThreadStatus, threadStatusKind } from "./StatusSlot";
 import { snoozeWakeLabel } from "./lifecycle";
 import {
   Tooltip,
@@ -50,7 +47,7 @@ function QuietNewsMark({
   return (
     <Tooltip delayDuration={350} disableHoverableContent>
       <TooltipTrigger asChild>
-        <span className="inline-flex items-center" aria-label={note}>
+        <span className="pl-sb-quiet-wrap" aria-label={note}>
           {children}
         </span>
       </TooltipTrigger>
@@ -84,36 +81,46 @@ export function ParkedRow({
 }) {
   const isSnoozed = shelf === "snoozed";
   const status = <ThreadStatus thread={statusThread} />;
-  const quietDot = <ThreadStatusGlyph indicator="unread-success" />;
+  const quietDot = (
+    <span
+      className="pl-sb-dot pl-sb-dot-quiet"
+      data-status-kind="quiet-news"
+      aria-hidden="true"
+    />
+  );
   const showsStatusInstead = statusOutranksQuietNews(statusThread.indicator);
+  const wakeTitle =
+    isSnoozed && wakeAt !== null
+      ? `Wakes in ${snoozeWakeLabel(wakeAt, now)}`
+      : undefined;
+  const hasLeadStatus =
+    Boolean(quietNewsNote) || threadStatusKind(statusThread) !== "idle";
+
   return (
     <SidebarRow
       thread={thread}
       isActive={isActive}
       muted
-      trailing={
+      hasLeadStatus={hasLeadStatus}
+      metaTitle={wakeTitle}
+      lead={
         quietNewsNote ? (
           <QuietNewsMark
             note={
-              isSnoozed && wakeAt !== null
-                ? `${quietNewsNote}. Wakes in ${snoozeWakeLabel(wakeAt, now)}.`
-                : quietNewsNote
+              wakeTitle ? `${quietNewsNote}. ${wakeTitle}.` : quietNewsNote
             }
           >
             {showsStatusInstead ? (
-              <span className="relative inline-flex items-center">
-                <span
-                  data-quiet-news-dot=""
-                  className="absolute right-full top-1/2 mr-2 size-[5px] -translate-y-1/2 rounded-full bg-muted-foreground/60 max-md:pointer-coarse:size-1.5"
-                />
+              <>
+                <span data-quiet-news-dot="" className="pl-sb-quiet-pip" />
                 {status}
-              </span>
+              </>
             ) : (
               quietDot
             )}
           </QuietNewsMark>
         ) : (
-          (<span title={isSnoozed && wakeAt !== null ? `Wakes in ${snoozeWakeLabel(wakeAt, now)}` : undefined}>{status}</span>)
+          status
         )
       }
       actions={[

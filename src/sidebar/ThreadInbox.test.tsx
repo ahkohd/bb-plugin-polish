@@ -619,7 +619,7 @@ describe("thread actions", () => {
 });
 
 describe("row metadata", () => {
-  it("shows only the title and its status on one line", async () => {
+  it("shows the title, lowercase project name and age without provider or host noise", async () => {
     render([
       thread({
         id: "thr_m",
@@ -634,13 +634,28 @@ describe("row metadata", () => {
           providerId: null,
           workspaceDisplayKind: "managed-worktree",
         },
+        updatedAt: Date.now() - (2 * 60_000),
       }),
+    ], [
+      {
+        id: "proj_1",
+        name: "Execa",
+        isPersonal: false,
+        href: "/p/proj_1",
+        settingsHref: "/p/proj_1/settings",
+      },
     ]);
     expect(await screen.findByText("A thread")).toBeDefined();
     expect(screen.queryByLabelText("Claude Code")).toBeNull();
     expect(screen.queryByText("Sawyer's MacBook")).toBeNull();
     expect(screen.queryByText("bb/feature")).toBeNull();
-    expect(screen.queryByText("bb")).toBeNull();
+    expect(screen.getByText("execa")).toBeDefined();
+    expect(screen.getByText("2m")).toBeDefined();
+    // Scoping to one project hides the project name and keeps the age.
+    fireEvent.click(screen.getByLabelText(/Project scope/));
+    fireEvent.click(screen.getByRole("option", { name: "Execa" }));
+    expect(screen.queryByText("execa")).toBeNull();
+    expect(screen.getByText("2m")).toBeDefined();
   });
 
   it("shows the activity age for an idle thread", async () => {
@@ -651,7 +666,7 @@ describe("row metadata", () => {
     expect(screen.getByText("3h")).toBeDefined();
   });
 
-  it("leaves the slot empty for an unrecognized indicator", async () => {
+  it("leaves the lead status slot empty for an unrecognized indicator while keeping age", async () => {
     render([
       thread({
         id: "thr_new",
@@ -660,37 +675,42 @@ describe("row metadata", () => {
       }),
     ]);
     await screen.findByText("A thread");
-    expect(screen.queryByText("3h")).toBeNull();
+    expect(statusKinds()).toEqual([]);
+    expect(screen.getByText("3h")).toBeDefined();
   });
 });
 
-// The three states that want the user take the slot from the age label, and
-// they use bb's own glyphs: the two lists sit in one window, and a user who
-// switches between them should not have to learn a second vocabulary.
-function statusGlyphs(): string[] {
-  return [...document.querySelectorAll("[data-thread-status-glyph]")].map(
-    (glyph) => glyph.getAttribute("data-thread-status-glyph") ?? "",
+function statusKinds(): string[] {
+  return [...document.querySelectorAll("[data-status-kind]")].map(
+    (glyph) => glyph.getAttribute("data-status-kind") ?? "",
+  );
+}
+
+function statusIndicators(): string[] {
+  return [...document.querySelectorAll("[data-status-indicator]")].map(
+    (glyph) => glyph.getAttribute("data-status-indicator") ?? "",
   );
 }
 
 describe("status glyphs", () => {
-  for (const indicator of [
-    "waiting-for-input",
-    "unread-error",
-    "unread-success",
-    "runtime",
+  for (const [indicator, kind] of [
+    ["waiting-for-input", "needs-you"],
+    ["unread-error", "needs-you"],
+    ["unread-success", "unread"],
+    ["runtime", "running"],
   ] as const) {
-    it(`draws bb's ${indicator} glyph`, async () => {
+    it(`draws the ${kind} lead indicator for ${indicator}`, async () => {
       render([thread({ id: `thr_${indicator}`, indicator })]);
       await screen.findByText("A thread");
-      expect(statusGlyphs()).toEqual([indicator]);
+      expect(statusKinds()).toEqual([kind]);
+      expect(statusIndicators()).toEqual([indicator]);
     });
   }
 
   it("draws nothing for an idle thread", async () => {
     render([thread({ id: "thr_idle" })]);
     await screen.findByText("A thread");
-    expect(statusGlyphs()).toEqual([]);
+    expect(statusKinds()).toEqual([]);
   });
 
   it("rolls the most urgent child status onto a collapsed parent", async () => {
@@ -710,7 +730,8 @@ describe("status glyphs", () => {
       }),
     ]);
     await screen.findByText("Parent work");
-    expect(statusGlyphs()).toEqual(["waiting-for-input"]);
+    expect(statusKinds()).toEqual(["needs-you"]);
+    expect(statusIndicators()).toEqual(["waiting-for-input"]);
   });
 });
 
@@ -808,7 +829,7 @@ describe("child threads", () => {
       },
     });
     await screen.findByText("Parent work");
-    expect(statusGlyphs()).toEqual(["waiting-for-input"]);
+    expect(statusIndicators()).toEqual(["waiting-for-input"]);
     expect(screen.queryByRole("region", { name: "Settled" })).toBeNull();
   });
 });
@@ -1297,8 +1318,8 @@ describe("muted threads", () => {
     expect(screen.queryByText("Asking quietly")).toBeNull();
     expect(
       shelf
-        .querySelector("[data-shelf-trailing] [data-thread-status-glyph]")
-        ?.getAttribute("data-thread-status-glyph"),
+        .querySelector("[data-shelf-trailing] [data-status-indicator]")
+        ?.getAttribute("data-status-indicator"),
     ).toBe("waiting-for-input");
   });
 
@@ -2202,10 +2223,10 @@ describe("decision mode", () => {
       "Kept here: d1-3B judged this news can wait",
     );
     expect(
-      mark.querySelector("[data-thread-status-glyph]")?.getAttribute(
-        "data-thread-status-glyph",
+      mark.querySelector("[data-status-kind]")?.getAttribute(
+        "data-status-kind",
       ),
-    ).toBe("unread-success");
+    ).toBe("quiet-news");
   });
 });
 
@@ -2409,8 +2430,8 @@ describe("quiet news while running", () => {
     );
     expect(mark.querySelector("[data-quiet-news-dot]")).not.toBeNull();
     expect(
-      mark.querySelector("[data-thread-status-glyph]")?.getAttribute(
-        "data-thread-status-glyph",
+      mark.querySelector("[data-status-indicator]")?.getAttribute(
+        "data-status-indicator",
       ),
     ).toBe("runtime");
   });

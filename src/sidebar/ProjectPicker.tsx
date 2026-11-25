@@ -8,7 +8,6 @@ import {
 } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { Icon } from "./components/Icon";
-import { cn } from "./lib/utils";
 import { usePortalScopeProps } from "./lib/portal-scope";
 
 export interface ProjectOption {
@@ -97,13 +96,14 @@ export function ProjectPicker({
       <Popover.Trigger
         aria-label={`Project scope: ${selectedLabel}`}
         aria-haspopup="listbox"
-        className="group/scope flex h-7 min-w-0 flex-1 cursor-pointer items-center justify-between whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:duration-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        data-filtered={value !== allValue ? "true" : undefined}
+        className="pl-sb-picker-trigger"
       >
-        <span className="min-w-0 truncate">{selectedLabel}</span>
+        <span className="pl-sb-picker-label">{selectedLabel}</span>
         <Icon
           name="ChevronDown"
           aria-hidden="true"
-          className="size-4 opacity-0 transition-opacity duration-150 group-hover/scope:opacity-50 group-focus-visible/scope:opacity-50 group-data-[state=open]/scope:opacity-50 [@media(hover:none)]:opacity-50"
+          className="pl-sb-picker-chevron"
         />
       </Popover.Trigger>
       <Popover.Portal>
@@ -117,10 +117,14 @@ export function ProjectPicker({
               ?.querySelector<HTMLInputElement>("input")
               ?.focus();
           }}
-          className="z-50 flex max-h-96 w-[var(--radix-popover-trigger-width)] min-w-[12rem] flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2"
+          className="pl-sb-picker-content"
         >
-          <div className="flex items-center gap-2 border-b border-border px-2.5">
-            <Icon name="Search" aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
+          <div className="pl-sb-picker-search">
+            <Icon
+              name="Search"
+              aria-hidden="true"
+              className="pl-sb-picker-search-icon"
+            />
             <input
               role="combobox"
               aria-label="Search projects"
@@ -138,7 +142,7 @@ export function ProjectPicker({
               }}
               onKeyDown={onKeyDown}
               placeholder="Search projects"
-              className="h-8 min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground"
+              className="pl-sb-picker-input"
             />
           </div>
           <div
@@ -146,12 +150,10 @@ export function ProjectPicker({
             id={listId}
             role="listbox"
             aria-label="Projects"
-            className="min-h-0 flex-1 overflow-y-auto p-1"
+            className="pl-sb-picker-list"
           >
             {options.length === 0 ? (
-              <p className="px-2 py-1.5 text-xs text-muted-foreground">
-                No projects match.
-              </p>
+              <p className="pl-sb-picker-empty">No projects match.</p>
             ) : (
               options.map((option, index) => {
                 const selected = option.id === value;
@@ -166,15 +168,17 @@ export function ProjectPicker({
                     onPointerMove={() => setHighlighted(index)}
                     onPointerDown={(event) => event.preventDefault()}
                     onClick={() => choose(option.id)}
-                    className={cn(
-                      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-xs outline-none",
-                      index === highlighted && "bg-state-hover text-foreground",
-                    )}
+                    className="pl-sb-picker-option"
                   >
-                    <span className="min-w-0 truncate">{option.name}</span>
+                    <span className="pl-sb-picker-option-label">
+                      {option.name}
+                    </span>
                     {selected ? (
-                      <span className="absolute right-2 flex size-3.5 items-center justify-center">
-                        <Icon name="Check" className="size-4" />
+                      <span className="pl-sb-picker-check">
+                        <Icon
+                          name="Check"
+                          className="pl-sb-picker-check-icon"
+                        />
                       </span>
                     ) : null}
                   </div>

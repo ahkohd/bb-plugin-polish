@@ -4,13 +4,14 @@ import { experimental_Icon as BbIcon } from "@get-bb/plugin-sdk/app";
 import { Icon } from "./components/Icon";
 import { cn } from "./lib/utils";
 import { usePortalScopeProps } from "./lib/portal-scope";
-import { BUTTON_ICON_CLASS, CONTROL_BUTTON_CLASS } from "./SidebarRow";
 import { resolveSnoozePresets } from "./lifecycle";
 import {
   MENU_CHECKBOX_ITEM_CLASS,
   MENU_CONTENT_CLASS,
   MENU_ITEM_CLASS,
   MENU_SUB_TRIGGER_CLASS,
+  MENU_TRIGGER_BUTTON_CLASS,
+  MENU_TRIGGER_ICON_CLASS,
 } from "./menuStyles";
 
 export function InboxMenu({
@@ -46,11 +47,11 @@ export function InboxMenu({
           type="button"
           aria-label="Inbox actions"
           className={cn(
-            CONTROL_BUTTON_CLASS,
+            MENU_TRIGGER_BUTTON_CLASS,
             "data-[state=open]:bg-state-active data-[state=open]:text-foreground",
           )}
         >
-          <BbIcon name="MoreHorizontal" className={BUTTON_ICON_CLASS} />
+          <BbIcon name="MoreHorizontal" className={MENU_TRIGGER_ICON_CLASS} />
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>

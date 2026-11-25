@@ -11,15 +11,13 @@ import {
 } from "@get-bb/plugin-sdk/app";
 import {
   createContext,
-  useContext,
   useCallback,
+  useContext,
   useRef,
   useState,
-  type CSSProperties,
   type ReactNode,
 } from "react";
 import { Icon, type IconName } from "./components/Icon";
-import { cn } from "./lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./components/Tooltip";
 import { threadDisplayTitle } from "./inbox";
 import { RenameEditor, useInlineRename } from "./inlineRename";
@@ -27,11 +25,13 @@ import { toThreadActionTarget } from "./threadActionTarget";
 import type { PinnedDragBindings } from "./PinnedSortable";
 import { useRowWindowing } from "./rowWindowing";
 
-export const RowAppearanceContext = createContext<{ projects: ReadonlyMap<string, string>; now: number }>({ projects: new Map(), now: Date.now() });
+export const RowAppearanceContext = createContext<{
+  projects: ReadonlyMap<string, string>;
+  now: number;
+}>({ projects: new Map(), now: Date.now() });
 
-export function projectInitials(name: string): string {
-  const words = name.split(/[ .\-/_]+/).filter(Boolean);
-  return (words.length > 1 ? words[0][0] + words[1][0] : name.slice(0, 2)).toUpperCase();
+export function shortProjectName(name: string): string {
+  return name.trim().toLowerCase();
 }
 
 export function compactAge(at: number, now: number): string {
@@ -40,7 +40,10 @@ export function compactAge(at: number, now: number): string {
   if (minutes < 60) return `${minutes}m`;
   if (minutes < 1440) return `${Math.floor(minutes / 60)}h`;
   if (minutes < 10080) return `${Math.floor(minutes / 1440)}d`;
-  return new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return new Date(at).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export interface ChildToggle {
@@ -65,47 +68,16 @@ interface HoverButton {
 
 const NO_QUICK_ACTIONS: readonly string[] = [];
 
-const ROW_CLASS =
-  "bb-sidebar-hover-actions-row group/thread-row relative flex w-full cursor-pointer items-center gap-2 rounded-md text-[13px] transition-none h-[30px] max-md:pointer-coarse:h-[var(--bb-sidebar-row-height-coarse)]";
-
-const ROW_INTERACTIVE_CLASS =
-  "bb-sidebar-accent-row hover:bg-state-hover has-[[data-state=open]]:bg-state-hover has-[:focus-visible]:bg-state-hover has-[:focus-visible]:ring-[1.5px] has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-sidebar-ring";
-
-const ROW_SELECTED_CLASS = "bb-sidebar-selected-row bg-state-active";
-
-const TRAILING_SLOT_CLASS =
-  "relative h-7 w-10 shrink-0 max-md:pointer-coarse:h-9 max-md:pointer-coarse:w-9";
-
-const CHILD_TOGGLE_CLASS =
-  "relative z-10 inline-flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-md text-subtle-foreground outline-none ring-sidebar-ring transition-none hover:bg-state-hover hover:text-muted-foreground focus-visible:ring-2 active:bg-state-active";
-
 const ROW_BASE_PADDING_PX = 8;
-const ROW_DEPTH_STEP_PX = 24;
+const ROW_DEPTH_STEP_PX = 14;
 const GUIDE_LINE_OFFSET_PX = 8;
 
 function rowPaddingLeft(depth: number): number {
   return ROW_BASE_PADDING_PX + depth * ROW_DEPTH_STEP_PX;
 }
 
-export const CONTROL_BUTTON_CLASS =
-  "relative m-0 inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-subtle-foreground outline-none hover:bg-state-hover hover:text-muted-foreground active:bg-state-active focus-visible:ring-2 focus-visible:ring-sidebar-ring max-md:pointer-coarse:h-9 max-md:pointer-coarse:w-9";
-
-export const BUTTON_ICON_CLASS = "size-4 max-md:pointer-coarse:size-5";
-
-const BUTTON_WIDTH_SPACING = 7.5;
-const PULL_REQUEST_WIDTH_SPACING = 12.5;
-
-function hoverActionsInsetStyle(
-  buttonCount: number,
-  hasPullRequest: boolean,
-): CSSProperties {
-  const buttonsBeyondSlot = Math.max(0, buttonCount - 1);
-  const inset =
-    BUTTON_WIDTH_SPACING * buttonsBeyondSlot +
-    (hasPullRequest ? PULL_REQUEST_WIDTH_SPACING : 0);
-  return {
-    "--bb-sidebar-hover-actions-inset": `calc(var(--spacing) * ${inset})`,
-  } as CSSProperties;
+function joinClasses(...names: Array<string | false | null | undefined>): string {
+  return names.filter(Boolean).join(" ");
 }
 
 /** A thread's pull request, as some bb versions report it to the sidebar. */
@@ -124,21 +96,26 @@ type PullRequestHook = (threadId: string) => {
 // Not every bb exports this hook; without it rows show no pull request. The
 // choice is made once per load, so the hook order never changes.
 const useSidebarThreadPullRequest: PullRequestHook =
-  (bbApp as unknown as { experimental_useSidebarThreadPullRequest?: PullRequestHook })
-    .experimental_useSidebarThreadPullRequest ?? (() => ({ pullRequest: null }));
+  (
+    bbApp as unknown as {
+      experimental_useSidebarThreadPullRequest?: PullRequestHook;
+    }
+  ).experimental_useSidebarThreadPullRequest ?? (() => ({ pullRequest: null }));
 
-function pullRequestToneClass(pullRequest: PluginSidebarPullRequest): string {
-  if (pullRequest.state === "merged") return "text-[color:var(--pr-merged)]";
+function pullRequestTone(
+  pullRequest: PluginSidebarPullRequest,
+): "merged" | "attention" | "ready" | undefined {
+  if (pullRequest.state === "merged") return "merged";
   if (
     pullRequest.attention === "checks_failed" ||
     pullRequest.attention === "conflicts"
   ) {
-    return "text-destructive-text";
+    return "attention";
   }
   if (pullRequest.attention === "ready_to_merge") {
-    return "text-success-foreground";
+    return "ready";
   }
-  return "text-muted-foreground";
+  return undefined;
 }
 
 function PullRequestLink({
@@ -155,10 +132,8 @@ function PullRequestLink({
           rel="noreferrer"
           aria-label={`Pull request #${pullRequest.number}: ${pullRequest.title}`}
           onClick={(event) => event.stopPropagation()}
-          className={cn(
-            "inline-flex h-7 w-12 shrink-0 items-center justify-center rounded-md font-mono text-xs outline-none hover:bg-state-hover focus-visible:ring-2 focus-visible:ring-sidebar-ring max-md:pointer-coarse:h-9",
-            pullRequestToneClass(pullRequest),
-          )}
+          className="pl-sb-pr"
+          data-tone={pullRequestTone(pullRequest)}
         >
           #{pullRequest.number}
         </a>
@@ -182,7 +157,7 @@ function HoverActionButton({ button }: { button: HoverButton }) {
             if (event.detail > 0) event.currentTarget.blur();
             button.onActivate();
           }}
-          className={CONTROL_BUTTON_CLASS}
+          className="pl-sb-icon-btn"
         >
           {button.icon}
         </button>
@@ -198,17 +173,13 @@ function renderMenuTrigger(props: PluginThreadActionsTriggerProps) {
       {...props}
       type="button"
       aria-label="Thread actions"
-      className={cn(
-        props.className,
-        CONTROL_BUTTON_CLASS,
-        "data-[state=open]:bg-state-active data-[state=open]:text-foreground",
-      )}
+      className={joinClasses(props.className, "pl-sb-icon-btn")}
       onClick={(event) => {
         props.onClick?.(event);
         event.stopPropagation();
       }}
     >
-      <BbIcon name="MoreHorizontal" className={BUTTON_ICON_CLASS} />
+      <BbIcon name="MoreHorizontal" className="pl-sb-icon-btn-glyph" />
     </button>
   );
 }
@@ -230,7 +201,9 @@ interface SidebarRowProps {
   depth?: number;
   lastChild?: boolean;
   childToggle?: ChildToggle;
-  trailing: ReactNode;
+  lead?: ReactNode;
+  hasLeadStatus?: boolean;
+  metaTitle?: string;
   actions: readonly RowAction[];
   quickActionKeys?: readonly string[];
   reorder?: PinnedDragBindings;
@@ -271,7 +244,7 @@ function RowPlaceholder({
   const navigate = useBbNavigate();
   const title = threadDisplayTitle(thread);
   return (
-    <li ref={listItemRef} className="list-none" data-row-placeholder="">
+    <li ref={listItemRef} className="pl-sb-item" data-row-placeholder="">
       <a
         data-sidebar-thread-shortcut-target=""
         data-sidebar-thread-id={thread.id}
@@ -284,14 +257,17 @@ function RowPlaceholder({
           });
           onNavigate();
         }}
-        className={cn(
-          ROW_CLASS,
-          ROW_INTERACTIVE_CLASS,
-          muted ? "text-muted-foreground" : "text-sidebar-foreground",
-        )}
+        className="bb-sidebar-hover-actions-row bb-sidebar-accent-row pl-sb-row pl-sb-row-interactive"
         style={{ paddingLeft: rowPaddingLeft(depth) }}
       >
-        <span className="min-w-0 flex-1 truncate">{title}</span>
+        <span className="pl-sb-lead" aria-hidden="true" />
+        <span
+          className="pl-sb-title"
+          data-muted={muted ? "true" : undefined}
+          data-unread={thread.isUnread ? "true" : undefined}
+        >
+          {title}
+        </span>
       </a>
     </li>
   );
@@ -304,7 +280,9 @@ function RealizedSidebarRow({
   depth = 0,
   lastChild = false,
   childToggle,
-  trailing,
+  lead,
+  hasLeadStatus = false,
+  metaTitle,
   actions,
   quickActionKeys = NO_QUICK_ACTIONS,
   reorder,
@@ -314,7 +292,8 @@ function RealizedSidebarRow({
   listItemRef?: (element: HTMLElement | null) => void;
 }) {
   const appearance = useContext(RowAppearanceContext);
-  const projectName = depth === 0 ? appearance.projects.get(thread.projectId) : undefined;
+  const projectName =
+    depth === 0 ? appearance.projects.get(thread.projectId) : undefined;
   const navigate = useBbNavigate();
   const { splitProps, layout } = useSidebarThreadSplit(thread.id);
   const { pullRequest } = useSidebarThreadPullRequest(thread.id);
@@ -339,18 +318,25 @@ function RealizedSidebarRow({
     ...actions.map((action) => ({
       key: action.label,
       label: action.label,
-      icon: <Icon name={action.icon} className={BUTTON_ICON_CLASS} />,
+      icon: <Icon name={action.icon} className="pl-sb-icon-btn-glyph" />,
       onActivate: action.onActivate,
     })),
     ...quickActions.map((entry) => ({
       key: entry.key,
       label: entry.action.label,
-      icon: <BbIcon name={entry.action.icon} className={BUTTON_ICON_CLASS} />,
+      icon: <BbIcon name={entry.action.icon} className="pl-sb-icon-btn-glyph" />,
       disabled: entry.action.disabled,
       onActivate: () => void entry.action.run(),
     })),
   ];
   const hoverActionsOpen = isMenuOpen ? "true" : undefined;
+  const activityTimestamp = Math.max(
+    thread.latestAttentionAt ?? 0,
+    thread.updatedAt ?? 0,
+    thread.createdAt ?? 0,
+  );
+  const age = compactAge(activityTimestamp, appearance.now);
+  const guideLeft = rowPaddingLeft(depth - 1) + GUIDE_LINE_OFFSET_PX;
 
   return (
     <ThreadActionsContextMenu
@@ -359,75 +345,80 @@ function RealizedSidebarRow({
       onCloseAutoFocus={rename.onMenuCloseAutoFocus}
       disabled={rename.isEditing}
     >
-      <li ref={listItemRef} className="list-none group/child" data-sidebar-rename-row="">
+      <li
+        ref={listItemRef}
+        className="pl-sb-item"
+        data-sidebar-rename-row=""
+      >
         <div
-          className={cn(
-            ROW_CLASS,
-            isActive ? ROW_SELECTED_CLASS : ROW_INTERACTIVE_CLASS,
+          data-depth={depth > 0 ? depth : undefined}
+          className={joinClasses(
+            "bb-sidebar-hover-actions-row pl-sb-row",
+            isActive
+              ? "bb-sidebar-selected-row pl-sb-row-selected"
+              : "bb-sidebar-accent-row pl-sb-row-interactive",
             !isActive && layout !== null && "bb-sidebar-open-in-split-row",
-            muted && !isActive
-              ? "text-muted-foreground"
-              : "text-sidebar-foreground",
-            reorder && "select-none",
+            reorder && "pl-sb-row-reorder",
           )}
           style={{ paddingLeft: rowPaddingLeft(depth) }}
         >
           {depth > 0 ? (
-            <span
-              aria-hidden="true"
-              className={cn("pointer-events-none absolute top-0 z-[1] w-px bg-border", lastChild ? "bottom-1/2" : "bottom-0")}
-              style={{ left: rowPaddingLeft(depth - 1) + GUIDE_LINE_OFFSET_PX }}
-            />
-          ) : null}
-          {projectName ? <span title={projectName} className="pointer-events-none flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-state-active text-[9px] font-semibold text-muted-foreground">{projectInitials(projectName)}</span> : null}
-          <span
-            className="bb-sidebar-hover-actions-inset relative flex min-w-0 flex-1 items-center self-stretch"
-            style={hoverActionsInsetStyle(
-              hoverButtons.length + 1,
-              pullRequest !== null,
-            )}
-          >
-            <a
-              data-sidebar-thread-shortcut-target=""
-              data-sidebar-thread-id={thread.id}
-              data-sidebar-rename-anchor=""
-              href={thread.href}
-              aria-label={title}
-              {...splitProps}
-              draggable={false}
-              ref={setAnchor}
-              {...dragHandleAttributes(reorder)}
-              {...reorder?.listeners}
-              onClick={(event) => {
-                event.preventDefault();
-                if (rename.isEditing) {
-                  event.stopPropagation();
-                  return;
-                }
-                navigate.toThread(thread.id, {
-                  split: event.metaKey || event.ctrlKey,
-                });
-                onNavigate();
-              }}
-              onDoubleClick={(event) => {
-                if (rename.isEditing) return;
-                event.preventDefault();
-                event.stopPropagation();
-                rename.startFromDoubleClick();
-              }}
-              className="absolute inset-0 rounded-md outline-none"
-            />
-            {rename.isEditing ? (
-              <RenameEditor
-                rename={rename}
-                label="Thread name"
-                anchor={() => anchorRef.current}
+            <>
+              {!lastChild ? (
+                <span
+                  aria-hidden="true"
+                  className="pl-sb-guide"
+                  style={{ left: guideLeft }}
+                />
+              ) : null}
+              <span
+                aria-hidden="true"
+                className="pl-sb-guide-curve"
+                style={{ left: guideLeft }}
               />
-            ) : (
-              <span className={cn("pointer-events-none relative min-w-0 truncate", muted ? "text-muted-foreground font-[450]" : isActive ? "font-medium" : thread.isUnread ? "font-[560] text-foreground" : "font-[450] text-sidebar-foreground/85")}>
-                {title}
-              </span>
-            )}
+            </>
+          ) : null}
+
+          <a
+            data-sidebar-thread-shortcut-target=""
+            data-sidebar-thread-id={thread.id}
+            data-sidebar-rename-anchor=""
+            href={thread.href}
+            aria-label={title}
+            {...splitProps}
+            draggable={false}
+            ref={setAnchor}
+            {...dragHandleAttributes(reorder)}
+            {...reorder?.listeners}
+            onClick={(event) => {
+              event.preventDefault();
+              if (rename.isEditing) {
+                event.stopPropagation();
+                return;
+              }
+              navigate.toThread(thread.id, {
+                split: event.metaKey || event.ctrlKey,
+              });
+              onNavigate();
+            }}
+            onDoubleClick={(event) => {
+              if (rename.isEditing) return;
+              event.preventDefault();
+              event.stopPropagation();
+              rename.startFromDoubleClick();
+            }}
+            className="pl-sb-anchor"
+          />
+
+          <span
+            className="pl-sb-lead"
+            data-has-toggle={childToggle && !rename.isEditing ? "true" : undefined}
+            data-expanded={
+              childToggle && !childToggle.collapsed ? "true" : undefined
+            }
+            data-empty-status={!hasLeadStatus ? "true" : undefined}
+          >
+            <span className="pl-sb-lead-status">{lead}</span>
             {childToggle && !rename.isEditing ? (
               <button
                 type="button"
@@ -437,68 +428,98 @@ function RealizedSidebarRow({
                     ? `Expand ${title} threads`
                     : `Collapse ${title} threads`
                 }
-                data-sidebar-hover-actions-mobile={
-                  childToggle.collapsed ? undefined : "always"
-                }
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   childToggle.onToggle();
                 }}
-                className={cn(
-                  "ml-1 w-auto gap-0.5 px-0.5",
-                  "pointer-events-auto",
-                  CHILD_TOGGLE_CLASS,
-                )}
+                className="pl-sb-child-toggle"
               >
                 <Icon
                   name="ChevronRight"
                   aria-hidden="true"
-                  className={cn(
-                    "size-3 transition-transform duration-150",
-                    !childToggle.collapsed && "rotate-90",
+                  className={joinClasses(
+                    "pl-sb-child-chevron",
+                    !childToggle.collapsed && "is-open",
                   )}
                 />
-                {childToggle.collapsed && childToggle.count ? <span className="text-[11px] tabular-nums">{childToggle.count}</span> : null}
               </button>
             ) : null}
           </span>
+
+          <span className="pl-sb-main">
+            {rename.isEditing ? (
+              <RenameEditor
+                rename={rename}
+                label="Thread name"
+                anchor={() => anchorRef.current}
+              />
+            ) : (
+              <span
+                className="pl-sb-title"
+                data-unread={thread.isUnread ? "true" : undefined}
+                data-active={isActive ? "true" : undefined}
+                data-muted={muted ? "true" : undefined}
+              >
+                {title}
+              </span>
+            )}
+          </span>
+
           <span
             data-sidebar-thread-trailing=""
-            className={cn(
-              "flex shrink-0 items-center",
-              rename.isEditing && "hidden",
+            className={joinClasses(
+              "pl-sb-trailing",
+              rename.isEditing && "pl-sb-trailing-hidden",
             )}
           >
-            <span className={TRAILING_SLOT_CLASS}>
-              <span
-                data-sidebar-hover-actions-open={hoverActionsOpen}
-                className="bb-sidebar-hover-actions-fade pointer-events-none absolute inset-0 flex items-center justify-center"
-              >
-                {trailing}
-              </span>
-              <div
-                data-sidebar-hover-actions-open={hoverActionsOpen}
-                className="bb-sidebar-hover-actions absolute inset-y-0 right-0 z-10 flex items-center justify-end gap-0.5 [@media(hover:none)]:hidden"
-              >
-                {pullRequest ? (
-                  <PullRequestLink pullRequest={pullRequest} />
-                ) : null}
-                {hoverButtons.map((button) => (
-                  <HoverActionButton key={button.key} button={button} />
-                ))}
-                <ThreadActionsMenu
-                  thread={actionTarget}
-                  requestRename={rename.menuRequestRename}
-                  onCloseAutoFocus={rename.onMenuCloseAutoFocus}
-                  trigger={renderMenuTrigger}
-                  side="right"
-                  align="start"
-                  sideOffset={8}
-                  onOpenChange={setIsMenuOpen}
-                />
-              </div>
+            <span
+              data-sidebar-hover-actions-open={hoverActionsOpen}
+              title={metaTitle}
+              className={joinClasses(
+                "bb-sidebar-hover-actions-fade pl-sb-meta",
+                metaTitle && "pl-sb-meta-titled",
+              )}
+            >
+              {childToggle?.collapsed && childToggle.count ? (
+                <span className="pl-sb-children-count" aria-hidden="true">
+                  <Icon
+                    name="ChevronRight"
+                    aria-hidden="true"
+                    className="pl-sb-children-count-icon"
+                  />
+                  {childToggle.count}
+                </span>
+              ) : null}
+              {projectName ? (
+                <span className="pl-sb-project" title={projectName}>
+                  {shortProjectName(projectName)}
+                </span>
+              ) : null}
+              <span className="pl-sb-age">{age}</span>
             </span>
+
+            <div
+              data-sidebar-hover-actions-open={hoverActionsOpen}
+              className="bb-sidebar-hover-actions pl-sb-actions"
+            >
+              {pullRequest ? (
+                <PullRequestLink pullRequest={pullRequest} />
+              ) : null}
+              {hoverButtons.map((button) => (
+                <HoverActionButton key={button.key} button={button} />
+              ))}
+              <ThreadActionsMenu
+                thread={actionTarget}
+                requestRename={rename.menuRequestRename}
+                onCloseAutoFocus={rename.onMenuCloseAutoFocus}
+                trigger={renderMenuTrigger}
+                side="right"
+                align="start"
+                sideOffset={8}
+                onOpenChange={setIsMenuOpen}
+              />
+            </div>
           </span>
         </div>
       </li>

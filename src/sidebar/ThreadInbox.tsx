@@ -10,7 +10,6 @@ import {
 import { toast } from "sonner";
 import {
   experimental_useSidebarThreads as useSidebarThreads,
-  experimental_ThreadStatusGlyph as ThreadStatusGlyph,
   useRpc,
   useSdk,
   type PluginSidebarThread,
@@ -23,13 +22,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./components/Tooltip";
-import { cn } from "./lib/utils";
 import { InboxRow } from "./InboxRow";
 import { ParkedRow } from "./ParkedRow";
 import { ProjectPicker } from "./ProjectPicker";
 import { CompactViewportContext } from "./inlineRename";
 import { SidebarRow, RowAppearanceContext, type ChildToggle } from "./SidebarRow";
-import { ThreadStatus } from "./StatusSlot";
+import { ThreadStatus, threadStatusKind } from "./StatusSlot";
 import {
   isIdleApartFromBackgroundCommands,
   useLifecycle,
@@ -67,6 +65,7 @@ import {
   sortByCreatedAtDescending,
   visibleInboxThreads,
 } from "./inbox";
+import "./sidebar.css";
 
 const ALL_PROJECTS = "__all__";
 
@@ -100,12 +99,15 @@ const DEFAULT_LAYOUT = {
   expandedParents: [],
 };
 
+function joinClasses(...names: Array<string | false | null | undefined>): string {
+  return names.filter(Boolean).join(" ");
+}
+
 /**
- * The sidebar's scrolling list: one flat, statically ordered stack of cards.
+ * The sidebar's scrolling list: one flat, statically ordered stack of rows.
  *
- * The host owns the New-thread button and the search field above it, so this
- * ships neither. It filters by the `searchQuery` prop and keeps only the one
- * control the host has no equivalent for: the project scope picker.
+ * The host owns New thread and search; this filters by `searchQuery` and keeps
+ * the project filter header above the list plus the parked shelves at the bottom.
  */
 export function ThreadInbox({
   activeThreadId,
@@ -120,7 +122,10 @@ export function ThreadInbox({
     decisionModelName || "the decision model"
   } judged this news can wait`;
   const [now, setNow] = useState(Date.now);
-  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(timer); }, []);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const [scope, setScope] = useState<string>(ALL_PROJECTS);
   const { collapsedShelves, expandedParents, toggleShelf, toggleParent } =
     useSyncedLayout(DEFAULT_LAYOUT);
@@ -214,24 +219,35 @@ export function ThreadInbox({
     toggleShelf(shelf === "muted" ? MUTED_SHELF_OPEN_ITEM : shelf);
 
   const parkedShelves = ["snoozed", "settled", "muted"] as const;
-  const openDockShelf = parkedShelves.find(shelf => ({ snoozed, settled, muted })[shelf].length > 0 && !isShelfCollapsed(shelf)) ?? null;
+  const openDockShelf =
+    parkedShelves.find(
+      (shelf) =>
+        ({ snoozed, settled, muted })[shelf].length > 0 &&
+        !isShelfCollapsed(shelf),
+    ) ?? null;
   const toggleDockShelf = (shelf: ParkedShelfId) => {
     for (const other of parkedShelves) {
-      if (other === shelf || !isShelfCollapsed(other)) toggleShelfCollapsed(other);
+      if (other === shelf || !isShelfCollapsed(other))
+        toggleShelfCollapsed(other);
     }
   };
   useEffect(() => {
     if (!openDockShelf) return;
     for (const shelf of parkedShelves) {
-      if (shelf !== openDockShelf && !isShelfCollapsed(shelf)) toggleShelfCollapsed(shelf);
+      if (shelf !== openDockShelf && !isShelfCollapsed(shelf))
+        toggleShelfCollapsed(shelf);
     }
   }, [openDockShelf, collapsedShelves]);
   const dockScrollRef = useRef<HTMLDivElement | null>(null);
-  const dockWindowing = useRowWindowingController(dockScrollRef, visibleCount >= WINDOWING_THRESHOLD);
+  const dockWindowing = useRowWindowingController(
+    dockScrollRef,
+    visibleCount >= WINDOWING_THRESHOLD,
+  );
   useEffect(() => {
     if (!openDockShelf) return;
     const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented) toggleShelfCollapsed(openDockShelf);
+      if (event.key === "Escape" && !event.defaultPrevented)
+        toggleShelfCollapsed(openDockShelf);
     };
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
@@ -496,8 +512,12 @@ export function ThreadInbox({
     ancestors: ReadonlySet<string>,
   ): ReactNode => {
     if (!expandedParents.has(parent.id)) return null;
-    const children = (childrenById.get(parent.id) ?? []).filter((child) => !ancestors.has(child.id));
-    return children.map((child, index) => (
+    const children = (childrenById.get(parent.id) ?? []).filter(
+      (child) => !ancestors.has(child.id),
+    );
+    return children.map((child, index) => {
+      const childStatus = statusThreadFor(child);
+      return (
         <Fragment key={child.id}>
           <SidebarRow
             thread={child}
@@ -505,14 +525,16 @@ export function ThreadInbox({
             depth={depth}
             lastChild={index === children.length - 1}
             childToggle={childToggleFor(child)}
-            trailing={<ThreadStatus thread={statusThreadFor(child)} />}
+            lead={<ThreadStatus thread={childStatus} />}
+            hasLeadStatus={threadStatusKind(childStatus) !== "idle"}
             actions={[]}
             quickActionKeys={ARCHIVE_QUICK_ACTION_KEYS}
             onNavigate={onNavigate}
           />
           {renderChildren(child, depth + 1, new Set([...ancestors, child.id]))}
         </Fragment>
-      ));
+      );
+    });
   };
 
   const pinnedIds = useMemo(() => pinned.map((thread) => thread.id), [pinned]);
@@ -556,215 +578,256 @@ export function ThreadInbox({
     </Fragment>
   );
 
+  const appearanceValue = useMemo(
+    () => ({
+      now,
+      projects: new Map(
+        scope === ALL_PROJECTS
+          ? projects.map((project) => [project.id, project.name] as const)
+          : [],
+      ),
+    }),
+    [now, projects, scope],
+  );
+
   return (
-    <RowAppearanceContext.Provider value={{ now, projects: new Map(scope === ALL_PROJECTS ? projects.map(project => [project.id, project.name]) : []) }}>
-    <CompactViewportContext.Provider value={isCompactViewport}>
-      <RowWindowingContext.Provider value={windowing}>
-        <TooltipProvider delayDuration={350}>
-          <div className="flex min-h-0 flex-1 flex-col">
-            {/* The one control the host has no equivalent for. Everything else in
-          the chrome above — New thread, search — is bb's and stays bb's. */}
-            <div className="flex shrink-0 items-center gap-1 px-2 pb-1">
-              <ProjectPicker
-                value={scope}
-                allValue={ALL_PROJECTS}
-                allLabel="All projects"
-                projects={projects}
-                onChange={setScope}
-              />
-            </div>
-
-            <div
-              ref={scrollRef}
-              className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-2"
-            >
-              {status === "loading" || !lifecycle.isReady ? null : status ===
-                "error" ? (
-                <p
-                  role="status"
-                  className="px-2 py-6 text-center text-xs text-muted-foreground"
-                >
-                  Could not load threads.
-                </p>
-              ) : pinned.length +
-                  inbox.length +
-                  snoozed.length +
-                  settled.length +
-                  muted.length ===
-                0 ? (
-                <p
-                  role="status"
-                  className="px-2 py-6 text-center text-xs text-muted-foreground"
-                >
-                  {searchQuery.trim() ? "No threads found" : "No threads yet"}
-                </p>
-              ) : (
-                <>
-                  {pinned.length > 0 ? (
-                    <Shelf
-                      label="Pinned"
-                      count={pinned.length}
-                      collapsed={isShelfCollapsed("pinned")}
-                      onToggle={() => toggleShelfCollapsed("pinned")}
-                    >
-                      {isShelfCollapsed("pinned") ? null : (
-                        <PinnedSortableList
-                          ids={pinnedReorder.order}
-                          disabled={orderedPinned.length < 2}
-                          onDragEnd={pinnedReorder.handleDragEnd}
+    <RowAppearanceContext.Provider value={appearanceValue}>
+      <CompactViewportContext.Provider value={isCompactViewport}>
+        <RowWindowingContext.Provider value={windowing}>
+          <TooltipProvider delayDuration={350}>
+            <div className="pl-sb">
+              <div className="pl-sb-list-header">
+                <ProjectPicker
+                  value={scope}
+                  allValue={ALL_PROJECTS}
+                  allLabel="All projects"
+                  projects={projects}
+                  onChange={setScope}
+                />
+                {scope !== ALL_PROJECTS ? (
+                  <div className="pl-sb-list-actions">
+                    <Tooltip delayDuration={350} disableHoverableContent>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label="Show all projects"
+                          onClick={() => setScope(ALL_PROJECTS)}
+                          className="pl-sb-icon-btn"
                         >
-                          {orderedPinned.map((thread) => (
-                            <SortablePinnedItem key={thread.id} id={thread.id}>
-                              {(dragBindings) =>
-                                renderInboxTree(thread, dragBindings)
-                              }
-                            </SortablePinnedItem>
-                          ))}
-                        </PinnedSortableList>
-                      )}
-                    </Shelf>
-                  ) : null}
-                  {inbox.length > 0 ? (
-                    <Shelf
-                      label="Inbox"
-                      count={inbox.length}
-                      collapsed={isShelfCollapsed("inbox")}
-                      onToggle={() => toggleShelfCollapsed("inbox")}
-                      actionsOpen={isInboxMenuOpen}
-                      actions={
-                        <InboxMenu
-                          parkableCount={parkableInboxIds.length}
-                          settleOnRead={settleOnRead.since !== null}
-                          onSettleAll={settleAll}
-                          onSnoozeAll={snoozeAll}
-                          onSettleOnReadChange={(enabled) =>
-                            void settleOnRead
-                              .setEnabled(enabled)
-                              .catch(() =>
-                                toast.error(
-                                  "Could not change Settle after reading",
-                                ),
-                              )
-                          }
-                          onOpenChange={setIsInboxMenuOpen}
-                        />
-                      }
-                    >
-                      {isShelfCollapsed("inbox")
-                        ? null
-                        : inbox.map((thread) => renderInboxTree(thread))}
-                    </Shelf>
-                  ) : null}
+                          <svg
+                            className="pl-sb-icon-btn-glyph"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />
+                          </svg>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        Show all projects
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                ) : null}
+              </div>
 
-                </>
-              )}
-            </div>
-            {status === "ready" && lifecycle.isReady && snoozed.length + settled.length + muted.length > 0 ? (
-              <RowWindowingContext.Provider value={dockWindowing}>
-                <div ref={dockScrollRef} className="flex max-h-[45%] shrink-0 flex-col overflow-hidden border-t border-border px-1.5 pb-1" data-shelf-dock="">
-                  {(["snoozed", "settled", "muted"] as const).map((shelf) => {
-                    const parked =
-                      shelf === "snoozed"
-                        ? snoozed
-                        : shelf === "settled"
-                          ? settled
-                          : muted;
-                    if (parked.length === 0) return null;
-                    return (
+              <div ref={scrollRef} className="pl-sb-scroll">
+                {status === "loading" || !lifecycle.isReady ? null : status ===
+                  "error" ? (
+                  <p role="status" className="pl-sb-status-msg">
+                    Could not load threads.
+                  </p>
+                ) : pinned.length +
+                    inbox.length +
+                    snoozed.length +
+                    settled.length +
+                    muted.length ===
+                  0 ? (
+                  <p role="status" className="pl-sb-status-msg">
+                    {searchQuery.trim() ? "No threads found" : "No threads yet"}
+                  </p>
+                ) : (
+                  <>
+                    {pinned.length > 0 ? (
                       <Shelf
-                        key={shelf}
-                        label={PARKED_SHELF_LABELS[shelf]}
-                        count={parked.length}
-                        collapsed={openDockShelf !== shelf}
-                        dock
-                        onToggle={() => toggleDockShelf(shelf)}
-                        actionsOpen={openShelfMenu === shelf}
+                        label="Pinned"
+                        count={pinned.length}
+                        collapsed={isShelfCollapsed("pinned")}
+                        onToggle={() => toggleShelfCollapsed("pinned")}
+                      >
+                        {isShelfCollapsed("pinned") ? null : (
+                          <PinnedSortableList
+                            ids={pinnedReorder.order}
+                            disabled={orderedPinned.length < 2}
+                            onDragEnd={pinnedReorder.handleDragEnd}
+                          >
+                            {orderedPinned.map((thread) => (
+                              <SortablePinnedItem key={thread.id} id={thread.id}>
+                                {(dragBindings) =>
+                                  renderInboxTree(thread, dragBindings)
+                                }
+                              </SortablePinnedItem>
+                            ))}
+                          </PinnedSortableList>
+                        )}
+                      </Shelf>
+                    ) : null}
+                    {inbox.length > 0 ? (
+                      <Shelf
+                        label="Inbox"
+                        count={inbox.length}
+                        collapsed={isShelfCollapsed("inbox")}
+                        onToggle={() => toggleShelfCollapsed("inbox")}
+                        actionsOpen={isInboxMenuOpen}
                         actions={
-                          <ShelfMenu
-                            label={PARKED_SHELF_LABELS[shelf]}
-                            items={shelfMenuItems(
-                              shelf,
-                              parked.map((thread) => thread.id),
-                            )}
-                            choice={
-                              shelf === "settled"
-                                ? {
-                                    label: "Auto-archive",
-                                    icon: "Archive",
-                                    value:
-                                      settleOnRead.autoArchiveDays === null
-                                        ? "never"
-                                        : String(settleOnRead.autoArchiveDays),
-                                    options: AUTO_ARCHIVE_OPTIONS,
-                                    onChange: (value) =>
-                                      void settleOnRead
-                                        .setAutoArchiveDays(
-                                          value === "never"
-                                            ? null
-                                            : Number(value),
-                                        )
-                                        .catch(() =>
-                                          toast.error(
-                                            "Could not change auto-archive",
-                                          ),
-                                        ),
-                                  }
-                                : undefined
+                          <InboxMenu
+                            parkableCount={parkableInboxIds.length}
+                            settleOnRead={settleOnRead.since !== null}
+                            onSettleAll={settleAll}
+                            onSnoozeAll={snoozeAll}
+                            onSettleOnReadChange={(enabled) =>
+                              void settleOnRead
+                                .setEnabled(enabled)
+                                .catch(() =>
+                                  toast.error(
+                                    "Could not change Settle after reading",
+                                  ),
+                                )
                             }
-                            onOpenChange={(open) =>
-                              setOpenShelfMenu(open ? shelf : null)
-                            }
+                            onOpenChange={setIsInboxMenuOpen}
                           />
                         }
-                        trailing={
-                          shelf === "muted" ? (
-                            mutedThreadAsks ? (
-                              <ThreadStatusGlyph indicator="waiting-for-input" />
-                            ) : null
-                          ) : quietNewsCounts[shelf] > 0 ? (
-                            <QuietNewsDot count={quietNewsCounts[shelf]} />
-                          ) : null
-                        }
                       >
-                        {openDockShelf !== shelf
+                        {isShelfCollapsed("inbox")
                           ? null
-                          : parked.map((thread) => (
-                              <Fragment key={thread.id}>
-                                <ParkedRow
-                                  thread={thread}
-                                  isActive={thread.id === activeThreadId}
-                                  shelf={shelf}
-                                  wakeAt={lifecycle.wakeAtFor(thread)}
-                                  now={Date.now()}
-                                  onNavigate={onNavigate}
-                                  onRestore={() =>
-                                    restoreParked(shelf, thread.id)
-                                  }
-                                  childToggle={childToggleFor(thread)}
-                                  statusThread={statusThreadFor(thread)}
-                                  quietNewsNote={
-                                    lifecycle.hasQuietNews(thread)
-                                      ? quietNewsNote
-                                      : undefined
-                                  }
-                                />
-                                {renderChildren(
-                                  thread,
-                                  1,
-                                  new Set([thread.id]),
-                                )}
-                              </Fragment>
-                            ))}
+                          : inbox.map((thread) => renderInboxTree(thread))}
                       </Shelf>
-                    );
-                  })}
-                </div>
-              </RowWindowingContext.Provider>
-            ) : null}
-          </div>
-        </TooltipProvider>
-      </RowWindowingContext.Provider>
-    </CompactViewportContext.Provider>
+                    ) : null}
+                  </>
+                )}
+              </div>
+
+              {status === "ready" &&
+              lifecycle.isReady &&
+              snoozed.length + settled.length + muted.length > 0 ? (
+                <RowWindowingContext.Provider value={dockWindowing}>
+                  <div
+                    ref={dockScrollRef}
+                    className="pl-sb-dock"
+                    data-shelf-dock=""
+                  >
+                    {(["snoozed", "settled", "muted"] as const).map((shelf) => {
+                      const parked =
+                        shelf === "snoozed"
+                          ? snoozed
+                          : shelf === "settled"
+                            ? settled
+                            : muted;
+                      if (parked.length === 0) return null;
+                      return (
+                        <Shelf
+                          key={shelf}
+                          label={PARKED_SHELF_LABELS[shelf]}
+                          count={parked.length}
+                          collapsed={openDockShelf !== shelf}
+                          dock
+                          onToggle={() => toggleDockShelf(shelf)}
+                          actionsOpen={openShelfMenu === shelf}
+                          actions={
+                            <ShelfMenu
+                              label={PARKED_SHELF_LABELS[shelf]}
+                              items={shelfMenuItems(
+                                shelf,
+                                parked.map((thread) => thread.id),
+                              )}
+                              choice={
+                                shelf === "settled"
+                                  ? {
+                                      label: "Auto-archive",
+                                      icon: "Archive",
+                                      value:
+                                        settleOnRead.autoArchiveDays === null
+                                          ? "never"
+                                          : String(settleOnRead.autoArchiveDays),
+                                      options: AUTO_ARCHIVE_OPTIONS,
+                                      onChange: (value) =>
+                                        void settleOnRead
+                                          .setAutoArchiveDays(
+                                            value === "never"
+                                              ? null
+                                              : Number(value),
+                                          )
+                                          .catch(() =>
+                                            toast.error(
+                                              "Could not change auto-archive",
+                                            ),
+                                          ),
+                                    }
+                                  : undefined
+                              }
+                              onOpenChange={(open) =>
+                                setOpenShelfMenu(open ? shelf : null)
+                              }
+                            />
+                          }
+                          trailing={
+                            shelf === "muted" ? (
+                              mutedThreadAsks ? (
+                                <span
+                                  className="pl-sb-dot pl-sb-dot-needs"
+                                  data-status-kind="needs-you"
+                                  data-status-indicator="waiting-for-input"
+                                  aria-label="A muted thread needs you"
+                                />
+                              ) : null
+                            ) : quietNewsCounts[shelf] > 0 ? (
+                              <QuietNewsDot count={quietNewsCounts[shelf]} />
+                            ) : null
+                          }
+                        >
+                          {openDockShelf !== shelf
+                            ? null
+                            : parked.map((thread) => (
+                                <Fragment key={thread.id}>
+                                  <ParkedRow
+                                    thread={thread}
+                                    isActive={thread.id === activeThreadId}
+                                    shelf={shelf}
+                                    wakeAt={lifecycle.wakeAtFor(thread)}
+                                    now={now}
+                                    onNavigate={onNavigate}
+                                    onRestore={() =>
+                                      restoreParked(shelf, thread.id)
+                                    }
+                                    childToggle={childToggleFor(thread)}
+                                    statusThread={statusThreadFor(thread)}
+                                    quietNewsNote={
+                                      lifecycle.hasQuietNews(thread)
+                                        ? quietNewsNote
+                                        : undefined
+                                    }
+                                  />
+                                  {renderChildren(
+                                    thread,
+                                    1,
+                                    new Set([thread.id]),
+                                  )}
+                                </Fragment>
+                              ))}
+                        </Shelf>
+                      );
+                    })}
+                  </div>
+                </RowWindowingContext.Provider>
+              ) : null}
+            </div>
+          </TooltipProvider>
+        </RowWindowingContext.Provider>
+      </CompactViewportContext.Provider>
     </RowAppearanceContext.Provider>
   );
 }
@@ -777,21 +840,14 @@ function QuietNewsDot({ count }: { count: number }) {
   return (
     <Tooltip delayDuration={350} disableHoverableContent>
       <TooltipTrigger asChild>
-        <span
-          role="img"
-          aria-label={description}
-          className="inline-flex size-6 items-center justify-center"
-        >
-          <span className="text-[11px] tabular-nums text-foreground">{count}</span>
+        <span role="img" aria-label={description} className="pl-sb-quiet-count">
+          {count}
         </span>
       </TooltipTrigger>
       <TooltipContent side="bottom">{description}</TooltipContent>
     </Tooltip>
   );
 }
-
-const SHELF_LABEL_CLASS =
-  "bb-sidebar-hover-actions-row flex h-6 shrink-0 items-center rounded-md pl-2 pr-0 text-[11px] font-medium leading-5 text-subtle-foreground";
 
 function Shelf({
   label,
@@ -815,51 +871,76 @@ function Shelf({
   children: React.ReactNode;
 }) {
   return (
-    <section aria-label={label} className={dock ? "contents" : "mt-3 first:mt-0"}>
-      <h2 className={cn(SHELF_LABEL_CLASS, "relative", dock && "h-7", dock && !collapsed && "text-foreground")}>
-        <button type="button" aria-expanded={!collapsed} aria-label={collapsed ? `Expand ${label} section` : `Collapse ${label} section`} onClick={onToggle} className="group/header flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-md text-left outline-none focus-visible:ring-[1.5px] focus-visible:ring-inset focus-visible:ring-sidebar-ring">
-          <span className="min-w-0 truncate">{label}</span>
-          {dock ? null : <span className="tabular-nums">{count}</span>}
-          <Icon name="ChevronRight" aria-hidden="true" className={cn("size-3 opacity-0 group-hover/header:opacity-100 group-focus-visible/header:opacity-100", !collapsed && "rotate-90")} />
-          {/* In the dock the count sits in the rows' trailing column, where
-              ages and status glyphs line up, and gives way to the menu on hover. */}
-          {dock && trailing ? (
-            <span data-shelf-trailing="" className="flex size-4 shrink-0 items-center justify-center">{trailing}</span>
+    <section
+      aria-label={label}
+      className={dock ? "pl-sb-section-dock" : "pl-sb-section"}
+    >
+      <h2
+        data-has-actions={actions ? "true" : undefined}
+        data-open={dock && !collapsed ? "true" : undefined}
+        className={joinClasses(
+          "bb-sidebar-hover-actions-row pl-sb-shelf-head",
+          dock && "pl-sb-shelf-head-dock",
+        )}
+      >
+        <button
+          type="button"
+          aria-expanded={!collapsed}
+          aria-label={
+            collapsed ? `Expand ${label} section` : `Collapse ${label} section`
+          }
+          onClick={onToggle}
+          className="pl-sb-shelf-toggle"
+        >
+          <span className="pl-sb-shelf-label">{label}</span>
+          {!dock ? (
+            <Icon
+              name="ChevronRight"
+              aria-hidden="true"
+              className={joinClasses(
+                "pl-sb-shelf-chevron",
+                !collapsed && "is-open",
+              )}
+            />
           ) : null}
-          {dock ? (
-            <span className={cn("ml-auto pr-2 tabular-nums", actions && "bb-sidebar-hover-actions-fade")}>{count}</span>
-          ) : null}
+          <span
+            data-sidebar-hover-actions-open={actionsOpen ? "true" : undefined}
+            className={joinClasses(
+              "pl-sb-shelf-right",
+              Boolean(actions) && "bb-sidebar-hover-actions-fade",
+            )}
+          >
+            {trailing ? (
+              <span data-shelf-trailing="" className="pl-sb-shelf-trailing">
+                {trailing}
+              </span>
+            ) : null}
+            <span className="pl-sb-shelf-count">{count}</span>
+            {dock ? (
+              <Icon
+                name="ChevronRight"
+                aria-hidden="true"
+                className={joinClasses(
+                  "pl-sb-dock-chevron",
+                  !collapsed && "is-open",
+                )}
+              />
+            ) : null}
+          </span>
         </button>
-        <span className={cn("flex shrink-0 items-center", dock ? "absolute inset-y-0 right-0" : "relative")}>
-          {actions ? (
-            <span
-              data-sidebar-hover-actions-open={actionsOpen ? "true" : undefined}
-              className={cn(
-                "bb-sidebar-hover-actions z-10 flex shrink-0 items-center [@media(hover:none)]:opacity-100",
-                trailing &&
-                  "absolute inset-y-0 right-0 [@media(hover:none)]:static",
-              )}
-            >
-              {actions}
-            </span>
-          ) : null}
-          {trailing && !dock ? (
-            <span
-              data-shelf-trailing=""
-              data-sidebar-hover-actions-open={actionsOpen ? "true" : undefined}
-              className={cn(
-                "flex h-7 w-7 shrink-0 items-center justify-center",
-                actions &&
-                  "bb-sidebar-hover-actions-fade [@media(hover:none)]:opacity-100",
-              )}
-            >
-              {trailing}
-            </span>
-          ) : null}
-        </span>
+        {actions ? (
+          <span
+            data-sidebar-hover-actions-open={actionsOpen ? "true" : undefined}
+            className="bb-sidebar-hover-actions pl-sb-shelf-actions"
+          >
+            {actions}
+          </span>
+        ) : null}
       </h2>
       {collapsed ? null : (
-        <ul className={cn("mt-1 flex flex-col gap-px", dock && "order-first min-h-0 overflow-y-auto mb-1")}>{children}</ul>
+        <ul className={joinClasses("pl-sb-list", dock && "pl-sb-list-dock")}>
+          {children}
+        </ul>
       )}
     </section>
   );
