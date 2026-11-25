@@ -1,6 +1,6 @@
 import type { PluginSidebarThread } from "@get-bb/plugin-sdk/app";
 import { SidebarRow, type ChildToggle } from "./SidebarRow";
-import { ThreadStatus, threadStatusKind } from "./StatusSlot";
+import { ThreadStatus } from "./StatusSlot";
 import { snoozeWakeLabel } from "./lifecycle";
 import {
   Tooltip,
@@ -64,6 +64,7 @@ export function ParkedRow({
   now,
   onNavigate,
   childToggle,
+  hasExpandedChildren = false,
   statusThread = thread,
   onRestore,
   quietNewsNote,
@@ -75,6 +76,7 @@ export function ParkedRow({
   now: number;
   onNavigate: () => void;
   childToggle?: ChildToggle;
+  hasExpandedChildren?: boolean;
   statusThread?: PluginSidebarThread;
   onRestore: () => void;
   quietNewsNote?: string;
@@ -93,15 +95,13 @@ export function ParkedRow({
     isSnoozed && wakeAt !== null
       ? `Wakes in ${snoozeWakeLabel(wakeAt, now)}`
       : undefined;
-  const hasLeadStatus =
-    Boolean(quietNewsNote) || threadStatusKind(statusThread) !== "idle";
 
   return (
     <SidebarRow
       thread={thread}
       isActive={isActive}
       muted
-      hasLeadStatus={hasLeadStatus}
+      hasExpandedChildren={hasExpandedChildren}
       metaTitle={wakeTitle}
       lead={
         quietNewsNote ? (

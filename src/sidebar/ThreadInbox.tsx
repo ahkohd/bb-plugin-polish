@@ -28,7 +28,7 @@ import { ProjectPicker } from "./ProjectPicker";
 import { ALL_PROJECTS, projectScope, useProjectScope } from "./projectScope";
 import { CompactViewportContext } from "./inlineRename";
 import { SidebarRow, RowAppearanceContext, type ChildToggle } from "./SidebarRow";
-import { ThreadStatus, threadStatusKind } from "./StatusSlot";
+import { ThreadStatus } from "./StatusSlot";
 import {
   isIdleApartFromBackgroundCommands,
   useLifecycle,
@@ -512,32 +512,47 @@ export function ThreadInbox({
       ? thread
       : (summaries.get(thread.id)?.mostUrgent ?? thread);
 
+  const hasVisibleExpandedChildren = (
+    parent: PluginSidebarThread,
+    ancestors: ReadonlySet<string>,
+  ) =>
+    expandedParents.has(parent.id) &&
+    (childrenById.get(parent.id)?.some((child) => !ancestors.has(child.id)) ??
+      false);
+
   const renderChildren = (
     parent: PluginSidebarThread,
     depth: number,
     ancestors: ReadonlySet<string>,
+    ancestorContinuations: readonly boolean[],
   ): ReactNode => {
     if (!expandedParents.has(parent.id)) return null;
     const children = (childrenById.get(parent.id) ?? []).filter(
       (child) => !ancestors.has(child.id),
     );
     return children.map((child, index) => {
+      const isLast = index === children.length - 1;
       const childStatus = statusThreadFor(child);
+      const nextAncestors = new Set([...ancestors, child.id]);
       return (
         <Fragment key={child.id}>
           <SidebarRow
             thread={child}
             isActive={child.id === activeThreadId}
             depth={depth}
-            lastChild={index === children.length - 1}
+            lastChild={isLast}
+            ancestorContinuations={ancestorContinuations}
+            hasExpandedChildren={hasVisibleExpandedChildren(child, nextAncestors)}
             childToggle={childToggleFor(child)}
             lead={<ThreadStatus thread={childStatus} />}
-            hasLeadStatus={threadStatusKind(childStatus) !== "idle"}
             actions={[]}
             quickActionKeys={ARCHIVE_QUICK_ACTION_KEYS}
             onNavigate={onNavigate}
           />
-          {renderChildren(child, depth + 1, new Set([...ancestors, child.id]))}
+          {renderChildren(child, depth + 1, nextAncestors, [
+            ...ancestorContinuations,
+            !isLast,
+          ])}
         </Fragment>
       );
     });
@@ -560,29 +575,33 @@ export function ThreadInbox({
   const renderInboxTree = (
     thread: PluginSidebarThread,
     reorder?: PinnedDragBindings,
-  ) => (
-    <Fragment key={thread.id}>
-      <InboxRow
-        thread={thread}
-        isActive={thread.id === activeThreadId}
-        canPark={
-          !thread.isPinned &&
-          lifecycle.canPark(thread) &&
-          !hasDescendantWaitingForYou(thread)
-        }
-        onNavigate={onNavigate}
-        onSettle={() => lifecycle.settle(thread.id)}
-        onSnooze={(until) => lifecycle.snooze(thread.id, until)}
-        quickActionKeys={
-          thread.isPinned ? ARCHIVE_QUICK_ACTION_KEYS : undefined
-        }
-        childToggle={childToggleFor(thread)}
-        statusThread={statusThreadFor(thread)}
-        reorder={reorder}
-      />
-      {renderChildren(thread, 1, new Set([thread.id]))}
-    </Fragment>
-  );
+  ) => {
+    const rootAncestors = new Set([thread.id]);
+    return (
+      <Fragment key={thread.id}>
+        <InboxRow
+          thread={thread}
+          isActive={thread.id === activeThreadId}
+          canPark={
+            !thread.isPinned &&
+            lifecycle.canPark(thread) &&
+            !hasDescendantWaitingForYou(thread)
+          }
+          onNavigate={onNavigate}
+          onSettle={() => lifecycle.settle(thread.id)}
+          onSnooze={(until) => lifecycle.snooze(thread.id, until)}
+          quickActionKeys={
+            thread.isPinned ? ARCHIVE_QUICK_ACTION_KEYS : undefined
+          }
+          childToggle={childToggleFor(thread)}
+          hasExpandedChildren={hasVisibleExpandedChildren(thread, rootAncestors)}
+          statusThread={statusThreadFor(thread)}
+          reorder={reorder}
+        />
+        {renderChildren(thread, 1, rootAncestors, [])}
+      </Fragment>
+    );
+  };
 
   const appearanceValue = useMemo(
     () => ({
@@ -799,33 +818,36 @@ export function ThreadInbox({
                         >
                           {openDockShelf !== shelf
                             ? null
-                            : parked.map((thread) => (
-                                <Fragment key={thread.id}>
-                                  <ParkedRow
-                                    thread={thread}
-                                    isActive={thread.id === activeThreadId}
-                                    shelf={shelf}
-                                    wakeAt={lifecycle.wakeAtFor(thread)}
-                                    now={now}
-                                    onNavigate={onNavigate}
-                                    onRestore={() =>
-                                      restoreParked(shelf, thread.id)
-                                    }
-                                    childToggle={childToggleFor(thread)}
-                                    statusThread={statusThreadFor(thread)}
-                                    quietNewsNote={
-                                      lifecycle.hasQuietNews(thread)
-                                        ? quietNewsNote
-                                        : undefined
-                                    }
-                                  />
-                                  {renderChildren(
-                                    thread,
-                                    1,
-                                    new Set([thread.id]),
-                                  )}
-                                </Fragment>
-                              ))}
+                            : parked.map((thread) => {
+                                const rootAncestors = new Set([thread.id]);
+                                return (
+                                  <Fragment key={thread.id}>
+                                    <ParkedRow
+                                      thread={thread}
+                                      isActive={thread.id === activeThreadId}
+                                      shelf={shelf}
+                                      wakeAt={lifecycle.wakeAtFor(thread)}
+                                      now={now}
+                                      onNavigate={onNavigate}
+                                      onRestore={() =>
+                                        restoreParked(shelf, thread.id)
+                                      }
+                                      childToggle={childToggleFor(thread)}
+                                      hasExpandedChildren={hasVisibleExpandedChildren(
+                                        thread,
+                                        rootAncestors,
+                                      )}
+                                      statusThread={statusThreadFor(thread)}
+                                      quietNewsNote={
+                                        lifecycle.hasQuietNews(thread)
+                                          ? quietNewsNote
+                                          : undefined
+                                      }
+                                    />
+                                    {renderChildren(thread, 1, rootAncestors, [])}
+                                  </Fragment>
+                                );
+                              })}
                         </Shelf>
                       );
                     })}

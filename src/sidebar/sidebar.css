@@ -496,44 +496,19 @@
   outline: none;
 }
 
-/* ---------- Child tree guide line (Capy-style continuous spine + curved branch) ---------- */
-.pl-sb-guide {
+/* ---------- Child tree guide line (continuous spine + 6px rounded elbow) ---------- */
+.pl-sb-guide-svg {
   pointer-events: none;
   position: absolute;
-  top: -1px;
-  bottom: -1px;
+  top: 0;
+  height: 100%;
   z-index: 1;
-  width: 1px;
-  background: var(--border);
+  overflow: visible;
+  clip-path: inset(0 0 -1px 0);
+  color: var(--input);
 }
 
-.pl-sb-guide-curve {
-  pointer-events: none;
-  position: absolute;
-  top: -1px;
-  z-index: 1;
-  width: 9px;
-  height: calc(50% + 1px);
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  border-bottom-left-radius: 5px;
-}
-
-.pl-sb-row[data-depth] {
-  gap: 6px;
-}
-
-.pl-sb-row[data-depth] .pl-sb-lead {
-  width: 12px;
-  flex: 0 0 12px;
-}
-
-.pl-sb-row[data-depth] .pl-sb-lead-status {
-  width: 12px;
-  height: 12px;
-}
-
-/* ---------- Lead slot (16px: status dot/spinner or hover child disclosure) ---------- */
+/* ---------- Lead slot (16px: status dot or accent spinner) ---------- */
 .pl-sb-lead {
   position: relative;
   z-index: 2;
@@ -552,71 +527,6 @@
   justify-content: center;
   width: 16px;
   height: 16px;
-  transition: opacity 120ms ease;
-}
-
-.pl-sb-lead[data-has-toggle="true"] {
-  pointer-events: auto;
-}
-
-.pl-sb-child-toggle {
-  position: absolute;
-  inset: -2px;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--subtle-foreground);
-  cursor: pointer;
-  opacity: 0;
-  outline: none;
-  transition: opacity 120ms ease, background-color 120ms ease, color 120ms ease;
-}
-
-.pl-sb-child-toggle:hover {
-  background: var(--state-hover);
-  color: var(--foreground);
-}
-
-.pl-sb-child-toggle:focus-visible {
-  opacity: 1;
-  outline: 2px solid var(--ring);
-  outline-offset: -1px;
-}
-
-.pl-sb-child-chevron {
-  width: 12px;
-  height: 12px;
-  transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.pl-sb-child-chevron.is-open {
-  transform: rotate(90deg);
-}
-
-/* Expanded parent without a status indicator keeps its quiet chevron visible. */
-.pl-sb-lead[data-expanded="true"][data-empty-status="true"] .pl-sb-child-toggle {
-  opacity: 0.7;
-}
-
-.pl-sb-row:hover .pl-sb-lead[data-has-toggle="true"] .pl-sb-lead-status,
-.pl-sb-lead[data-has-toggle="true"]:has(:focus-visible) .pl-sb-lead-status {
-  opacity: 0;
-}
-
-.pl-sb-row:hover .pl-sb-child-toggle,
-.pl-sb-lead[data-has-toggle="true"]:has(:focus-visible) .pl-sb-child-toggle {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .pl-sb-lead[data-has-toggle="true"][data-empty-status="true"] .pl-sb-child-toggle {
-    opacity: 0.8;
-  }
 }
 
 /* ---------- Status dots and accent spinner ---------- */
@@ -625,6 +535,10 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
+}
+
+.pl-sb-dot-idle {
+  background: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
 }
 
 .pl-sb-dot-needs {
@@ -757,18 +671,56 @@
   pointer-events: auto;
 }
 
-.pl-sb-children-count {
+.pl-sb-children-btn {
   display: inline-flex;
   align-items: center;
   gap: 1px;
+  height: 24px;
+  margin: 0 0 0 -3px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: var(--radius, 6px);
+  background: transparent;
   color: var(--subtle-foreground);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 450;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  outline: none;
+  flex: none;
+  transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
 }
 
-.pl-sb-children-count-icon {
-  width: 10px;
-  height: 10px;
-  opacity: 0.75;
+.pl-sb-children-btn[data-expanded="true"] {
+  color: var(--foreground);
+}
+
+.pl-sb-children-btn:hover {
+  background: var(--state-hover);
+  color: var(--foreground);
+}
+
+.pl-sb-children-btn:active {
+  background: var(--state-active);
+  transform: scale(0.97);
+}
+
+.pl-sb-children-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}
+
+.pl-sb-children-icon {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  transform: translateY(-0.5px);
+}
+
+.pl-sb-children-count {
+  font-variant-numeric: tabular-nums;
 }
 
 .pl-sb-project {
@@ -806,6 +758,7 @@
 
 .pl-sb-row:is(:hover, :has(:focus-visible), :has([data-sidebar-hover-actions-open="true"])) .pl-sb-actions {
   max-width: 180px;
+  padding-left: 2px;
   overflow: visible;
   opacity: 1;
   pointer-events: auto;
@@ -913,8 +866,7 @@
   .pl-sb-row {
     gap: 6px;
   }
-  .pl-sb-project,
-  .pl-sb-children-count {
+  .pl-sb-project {
     display: none;
   }
 }
@@ -947,9 +899,7 @@
   .pl-sb-dock-chevron,
   .pl-sb-shelf-actions,
   .pl-sb-row,
-  .pl-sb-lead-status,
-  .pl-sb-child-toggle,
-  .pl-sb-child-chevron,
+  .pl-sb-children-btn,
   .pl-sb-title,
   .pl-sb-meta,
   .pl-sb-actions,
@@ -959,6 +909,7 @@
   }
 
   .pl-sb-picker-trigger:active,
+  .pl-sb-children-btn:active,
   .pl-sb-icon-btn:active:not(:disabled) {
     transform: none;
   }

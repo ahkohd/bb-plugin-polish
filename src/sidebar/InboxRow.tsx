@@ -1,7 +1,7 @@
 import type { PluginSidebarThread } from "@get-bb/plugin-sdk/app";
 import type { PinnedDragBindings } from "./PinnedSortable";
 import { SidebarRow, type ChildToggle, type RowAction } from "./SidebarRow";
-import { ThreadStatus, threadStatusKind } from "./StatusSlot";
+import { ThreadStatus } from "./StatusSlot";
 import { resolveSnoozePresets } from "./lifecycle";
 
 function snoozeUntilTomorrow(): number {
@@ -17,6 +17,7 @@ export function InboxRow({
   canPark,
   onNavigate,
   childToggle,
+  hasExpandedChildren = false,
   statusThread = thread,
   quickActionKeys,
   reorder,
@@ -28,6 +29,7 @@ export function InboxRow({
   canPark: boolean;
   onNavigate: () => void;
   childToggle?: ChildToggle;
+  hasExpandedChildren?: boolean;
   statusThread?: PluginSidebarThread;
   quickActionKeys?: readonly string[];
   reorder?: PinnedDragBindings;
@@ -50,7 +52,7 @@ export function InboxRow({
       thread={thread}
       isActive={isActive}
       lead={<ThreadStatus thread={statusThread} />}
-      hasLeadStatus={threadStatusKind(statusThread) !== "idle"}
+      hasExpandedChildren={hasExpandedChildren}
       actions={parkActions}
       quickActionKeys={quickActionKeys}
       reorder={reorder}

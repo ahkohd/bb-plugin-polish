@@ -602,7 +602,7 @@ describe("thread actions", () => {
       }),
     ]);
     fireEvent.click(
-      await screen.findByRole("button", { name: "Expand Parent work threads" }),
+      await screen.findByRole("button", { name: "Show 1 child thread" }),
     );
     const childRow = screen
       .getAllByRole("listitem")
@@ -666,7 +666,7 @@ describe("row metadata", () => {
     expect(screen.getByText("3h")).toBeDefined();
   });
 
-  it("leaves the lead status slot empty for an unrecognized indicator while keeping age", async () => {
+  it("falls back to the quiet idle dot for an unrecognized indicator while keeping age", async () => {
     render([
       thread({
         id: "thr_new",
@@ -675,7 +675,7 @@ describe("row metadata", () => {
       }),
     ]);
     await screen.findByText("A thread");
-    expect(statusKinds()).toEqual([]);
+    expect(statusKinds()).toEqual(["idle"]);
     expect(screen.getByText("3h")).toBeDefined();
   });
 });
@@ -707,10 +707,10 @@ describe("status glyphs", () => {
     });
   }
 
-  it("draws nothing for an idle thread", async () => {
+  it("draws a quiet idle dot for an idle thread", async () => {
     render([thread({ id: "thr_idle" })]);
     await screen.findByText("A thread");
-    expect(statusKinds()).toEqual([]);
+    expect(statusKinds()).toEqual(["idle"]);
   });
 
   it("rolls the most urgent child status onto a collapsed parent", async () => {
@@ -747,7 +747,7 @@ describe("child threads", () => {
   it("starts with the child list collapsed", async () => {
     render([parent, child]);
     expect(
-      await screen.findByRole("button", { name: "Expand Parent work threads" }),
+      await screen.findByRole("button", { name: "Show 1 child thread" }),
     ).toBeDefined();
     expect(screen.queryByText("Child work")).toBeNull();
   });
@@ -755,7 +755,7 @@ describe("child threads", () => {
   it("nests a child under its parent", async () => {
     render([parent, child]);
     fireEvent.click(
-      await screen.findByRole("button", { name: "Expand Parent work threads" }),
+      await screen.findByRole("button", { name: "Show 1 child thread" }),
     );
     const rows = (await screen.findAllByRole("listitem")).map(
       (row) => row.querySelector("[data-sidebar-thread-id]")?.getAttribute("aria-label"),
@@ -765,14 +765,69 @@ describe("child threads", () => {
 
   it("collapses and expands the child list", async () => {
     render([parent, child]);
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Expand Parent work threads" }),
-    );
+    const showBtn = await screen.findByRole("button", { name: "Show 1 child thread" });
+    expect(showBtn.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(showBtn);
     expect(screen.getByText("Child work")).toBeDefined();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Collapse Parent work threads" }),
-    );
+    const hideBtn = screen.getByRole("button", { name: "Hide child threads" });
+    expect(hideBtn.getAttribute("aria-expanded")).toBe("true");
+    expect(hideBtn.getAttribute("data-expanded")).toBe("true");
+    fireEvent.click(hideBtn);
     expect(screen.queryByText("Child work")).toBeNull();
+  });
+
+  it("supports ArrowRight and ArrowLeft keyboard expand/collapse on parent rows", async () => {
+    const secondChild = thread({
+      id: "thr_child_2",
+      title: "Second child",
+      parentThreadId: "thr_parent",
+      createdAt: 300,
+    });
+    render([parent, child, secondChild]);
+    expect(
+      await screen.findByRole("button", { name: "Show 2 child threads" }),
+    ).toBeDefined();
+    const link = screen.getByRole("link", { name: "Parent work" });
+    fireEvent.keyDown(link, { key: "ArrowRight" });
+    expect(screen.getByText("Child work")).toBeDefined();
+    expect(screen.getByText("Second child")).toBeDefined();
+    fireEvent.keyDown(link, { key: "ArrowLeft" });
+    expect(screen.queryByText("Child work")).toBeNull();
+  });
+
+  it("renders continuous tree guides across two levels and ancestor siblings", async () => {
+    const grandChild = thread({
+      id: "thr_grand",
+      title: "Grandchild work",
+      parentThreadId: "thr_child",
+      createdAt: 250,
+    });
+    const sibling = thread({
+      id: "thr_sibling",
+      title: "Sibling work",
+      parentThreadId: "thr_parent",
+      createdAt: 300,
+    });
+    render([parent, child, grandChild, sibling]);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Show 2 child threads" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Show 1 child thread" }),
+    );
+    const items = screen.getAllByRole("listitem");
+    const guidesFor = (title: string) => {
+      const row = items.find((item) =>
+        item.querySelector(`[aria-label="${title}"]`),
+      )!;
+      return [...row.querySelectorAll("[data-tree-guide]")].map((el) =>
+        el.getAttribute("data-tree-guide"),
+      );
+    };
+    expect(guidesFor("Parent work")).toEqual(["parent"]);
+    expect(guidesFor("Child work")).toEqual(["branch", "parent"]);
+    expect(guidesFor("Grandchild work")).toEqual(["ancestor", "branch-last"]);
+    expect(guidesFor("Sibling work")).toEqual(["branch-last"]);
   });
 
   it("keeps a settled parent settled while its child runs", async () => {
@@ -849,7 +904,7 @@ describe("pinned threads", () => {
     const pinned = await screen.findByRole("region", { name: "Pinned" });
     expect(within(pinned).getByText("Pinned child")).toBeDefined();
     expect(
-      screen.queryByRole("button", { name: "Expand Parent work threads" }),
+      screen.queryByRole("button", { name: /Show .* child thread/ }),
     ).toBeNull();
   });
 
@@ -923,7 +978,7 @@ describe("remembered layout", () => {
     ];
     const first = render(threads);
     fireEvent.click(
-      await screen.findByRole("button", { name: "Expand Parent work threads" }),
+      await screen.findByRole("button", { name: "Show 1 child thread" }),
     );
     first.unmount();
     render(threads);
@@ -2553,12 +2608,12 @@ describe("inline rename on a parent", () => {
       },
     );
     expect(
-      await screen.findByRole("button", { name: /Expand Parent threads|Collapse Parent threads/ }),
+      await screen.findByRole("button", { name: /Show 1 child thread|Hide child threads/ }),
     ).toBeDefined();
     fireEvent.doubleClick(screen.getByRole("link", { name: "Parent" }));
     expect(screen.getByRole("textbox", { name: "Thread name" })).toBeDefined();
     expect(
-      screen.queryByRole("button", { name: /Expand Parent threads|Collapse Parent threads/ }),
+      screen.queryByRole("button", { name: /Show 1 child thread|Hide child threads/ }),
     ).toBeNull();
   });
 });

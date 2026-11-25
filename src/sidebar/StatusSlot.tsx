@@ -96,5 +96,12 @@ export function ThreadStatus({ thread }: { thread: PluginSidebarThread }) {
       />
     );
   }
-  return null;
+  return (
+    <span
+      className="pl-sb-dot pl-sb-dot-idle"
+      data-status-kind="idle"
+      data-status-indicator={thread.indicator}
+      aria-hidden="true"
+    />
+  );
 }

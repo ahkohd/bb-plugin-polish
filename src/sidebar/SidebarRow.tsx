@@ -13,6 +13,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useId,
   useRef,
   useState,
   type ReactNode,
@@ -67,13 +68,132 @@ interface HoverButton {
 }
 
 const NO_QUICK_ACTIONS: readonly string[] = [];
+const NO_ANCESTOR_CONTINUATIONS: readonly boolean[] = [];
 
 const ROW_BASE_PADDING_PX = 8;
-const ROW_DEPTH_STEP_PX = 14;
-const GUIDE_LINE_OFFSET_PX = 8;
+const ROW_DEPTH_STEP_PX = 16;
+const LEAD_SLOT_WIDTH_PX = 16;
 
 function rowPaddingLeft(depth: number): number {
   return ROW_BASE_PADDING_PX + depth * ROW_DEPTH_STEP_PX;
+}
+
+/** Integer CSS left for a 1px SVG stroke at x=1, centered under the lead dot. */
+function guideLeft(depth: number): number {
+  return rowPaddingLeft(depth) + LEAD_SLOT_WIDTH_PX / 2 - 1;
+}
+
+function TreeGuides({
+  depth,
+  lastChild,
+  hasExpandedChildren,
+  ancestorContinuations,
+}: {
+  depth: number;
+  lastChild: boolean;
+  hasExpandedChildren: boolean;
+  ancestorContinuations: readonly boolean[];
+}) {
+  const rawId = useId();
+  const maskId = `pl-sb-gm-${rawId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  if (depth === 0 && !hasExpandedChildren) return null;
+
+  return (
+    <>
+      {ancestorContinuations.map((continues, ancestorDepth) =>
+        continues ? (
+          <svg
+            key={`anc-${ancestorDepth}`}
+            aria-hidden="true"
+            data-tree-guide="ancestor"
+            className="pl-sb-guide-svg"
+            style={{ left: guideLeft(ancestorDepth) }}
+            width="2"
+            height="100%"
+          >
+            <line
+              x1="1"
+              y1="0"
+              x2="1"
+              y2="60"
+              stroke="currentColor"
+              strokeWidth="1"
+            />
+          </svg>
+        ) : null,
+      )}
+      {depth > 0 ? (
+        <svg
+          aria-hidden="true"
+          data-tree-guide={lastChild ? "branch-last" : "branch"}
+          className="pl-sb-guide-svg"
+          style={{ left: guideLeft(depth - 1) }}
+          width="11"
+          height="100%"
+        >
+          <svg y="50%" overflow="visible">
+            {lastChild ? (
+              <path
+                d="M1 -30 V-6 A6 6 0 0 0 7 0 H10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+            ) : (
+              <>
+                <defs>
+                  <mask
+                    id={maskId}
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="-30"
+                    width="11"
+                    height="70"
+                  >
+                    <path
+                      d="M1 -30 V40 M1 -6 A6 6 0 0 0 7 0 H10"
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="1"
+                    />
+                  </mask>
+                </defs>
+                <rect
+                  x="0"
+                  y="-30"
+                  width="11"
+                  height="70"
+                  fill="currentColor"
+                  mask={`url(#${maskId})`}
+                />
+              </>
+            )}
+          </svg>
+        </svg>
+      ) : null}
+      {hasExpandedChildren ? (
+        <svg
+          aria-hidden="true"
+          data-tree-guide="parent"
+          className="pl-sb-guide-svg"
+          style={{ left: guideLeft(depth) }}
+          width="2"
+          height="100%"
+        >
+          <svg y="50%" overflow="visible">
+            <line
+              x1="1"
+              y1="6.5"
+              x2="1"
+              y2="30"
+              stroke="currentColor"
+              strokeWidth="1"
+            />
+          </svg>
+        </svg>
+      ) : null}
+    </>
+  );
 }
 
 function joinClasses(...names: Array<string | false | null | undefined>): string {
@@ -200,9 +320,10 @@ interface SidebarRowProps {
   muted?: boolean;
   depth?: number;
   lastChild?: boolean;
+  ancestorContinuations?: readonly boolean[];
+  hasExpandedChildren?: boolean;
   childToggle?: ChildToggle;
   lead?: ReactNode;
-  hasLeadStatus?: boolean;
   metaTitle?: string;
   actions: readonly RowAction[];
   quickActionKeys?: readonly string[];
@@ -219,6 +340,9 @@ export function SidebarRow(props: SidebarRowProps) {
       <RowPlaceholder
         thread={props.thread}
         depth={props.depth ?? 0}
+        lastChild={props.lastChild ?? false}
+        ancestorContinuations={props.ancestorContinuations ?? NO_ANCESTOR_CONTINUATIONS}
+        hasExpandedChildren={props.hasExpandedChildren ?? false}
         muted={props.muted ?? false}
         listItemRef={register}
         onNavigate={props.onNavigate}
@@ -231,12 +355,18 @@ export function SidebarRow(props: SidebarRowProps) {
 function RowPlaceholder({
   thread,
   depth,
+  lastChild,
+  ancestorContinuations,
+  hasExpandedChildren,
   muted,
   listItemRef,
   onNavigate,
 }: {
   thread: PluginSidebarThread;
   depth: number;
+  lastChild: boolean;
+  ancestorContinuations: readonly boolean[];
+  hasExpandedChildren: boolean;
   muted: boolean;
   listItemRef?: (element: HTMLElement | null) => void;
   onNavigate: () => void;
@@ -260,7 +390,15 @@ function RowPlaceholder({
         className="bb-sidebar-hover-actions-row bb-sidebar-accent-row pl-sb-row pl-sb-row-interactive"
         style={{ paddingLeft: rowPaddingLeft(depth) }}
       >
-        <span className="pl-sb-lead" aria-hidden="true" />
+        <TreeGuides
+          depth={depth}
+          lastChild={lastChild}
+          hasExpandedChildren={hasExpandedChildren}
+          ancestorContinuations={ancestorContinuations}
+        />
+        <span className="pl-sb-lead" aria-hidden="true">
+          <span className="pl-sb-dot pl-sb-dot-idle" />
+        </span>
         <span
           className="pl-sb-title"
           data-muted={muted ? "true" : undefined}
@@ -279,9 +417,10 @@ function RealizedSidebarRow({
   muted = false,
   depth = 0,
   lastChild = false,
+  ancestorContinuations = NO_ANCESTOR_CONTINUATIONS,
+  hasExpandedChildren = false,
   childToggle,
   lead,
-  hasLeadStatus = false,
   metaTitle,
   actions,
   quickActionKeys = NO_QUICK_ACTIONS,
@@ -334,7 +473,12 @@ function RealizedSidebarRow({
   // also moves when the thread is read, renamed or pinned.
   const activityTimestamp = Math.max(thread.latestAttentionAt ?? 0, thread.createdAt ?? 0);
   const age = compactAge(activityTimestamp, appearance.now);
-  const guideLeft = rowPaddingLeft(depth - 1) + GUIDE_LINE_OFFSET_PX;
+  const childCount = childToggle?.count ?? 0;
+  const childToggleLabel = childToggle
+    ? childToggle.collapsed
+      ? `Show ${childCount} ${childCount === 1 ? "child thread" : "child threads"}`
+      : "Hide child threads"
+    : undefined;
 
   return (
     <ThreadActionsContextMenu
@@ -360,22 +504,12 @@ function RealizedSidebarRow({
           )}
           style={{ paddingLeft: rowPaddingLeft(depth) }}
         >
-          {depth > 0 ? (
-            <>
-              {!lastChild ? (
-                <span
-                  aria-hidden="true"
-                  className="pl-sb-guide"
-                  style={{ left: guideLeft }}
-                />
-              ) : null}
-              <span
-                aria-hidden="true"
-                className="pl-sb-guide-curve"
-                style={{ left: guideLeft }}
-              />
-            </>
-          ) : null}
+          <TreeGuides
+            depth={depth}
+            lastChild={lastChild}
+            hasExpandedChildren={hasExpandedChildren}
+            ancestorContinuations={ancestorContinuations}
+          />
 
           <a
             data-sidebar-thread-shortcut-target=""
@@ -405,44 +539,22 @@ function RealizedSidebarRow({
               event.stopPropagation();
               rename.startFromDoubleClick();
             }}
+            onKeyDown={(event) => {
+              reorder?.listeners?.onKeyDown?.(event);
+              if (event.defaultPrevented || rename.isEditing || !childToggle) return;
+              if (event.key === "ArrowRight" && childToggle.collapsed) {
+                event.preventDefault();
+                childToggle.onToggle();
+              } else if (event.key === "ArrowLeft" && !childToggle.collapsed) {
+                event.preventDefault();
+                childToggle.onToggle();
+              }
+            }}
             className="pl-sb-anchor"
           />
 
-          <span
-            className="pl-sb-lead"
-            data-has-toggle={childToggle && !rename.isEditing ? "true" : undefined}
-            data-expanded={
-              childToggle && !childToggle.collapsed ? "true" : undefined
-            }
-            data-empty-status={!hasLeadStatus ? "true" : undefined}
-          >
+          <span className="pl-sb-lead">
             <span className="pl-sb-lead-status">{lead}</span>
-            {childToggle && !rename.isEditing ? (
-              <button
-                type="button"
-                aria-expanded={!childToggle.collapsed}
-                aria-label={
-                  childToggle.collapsed
-                    ? `Expand ${title} threads`
-                    : `Collapse ${title} threads`
-                }
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  childToggle.onToggle();
-                }}
-                className="pl-sb-child-toggle"
-              >
-                <Icon
-                  name="ChevronRight"
-                  aria-hidden="true"
-                  className={joinClasses(
-                    "pl-sb-child-chevron",
-                    !childToggle.collapsed && "is-open",
-                  )}
-                />
-              </button>
-            ) : null}
           </span>
 
           <span className="pl-sb-main">
@@ -471,6 +583,34 @@ function RealizedSidebarRow({
               rename.isEditing && "pl-sb-trailing-hidden",
             )}
           >
+            {childToggle && !rename.isEditing && childCount > 0 ? (
+              <Tooltip delayDuration={350} disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-expanded={!childToggle.collapsed}
+                    aria-label={childToggleLabel}
+                    data-expanded={!childToggle.collapsed ? "true" : undefined}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (event.detail > 0) event.currentTarget.blur();
+                      childToggle.onToggle();
+                    }}
+                    className="pl-sb-children-btn"
+                  >
+                    <BbIcon
+                      name="CornerDownRight"
+                      aria-hidden="true"
+                      className="pl-sb-children-icon"
+                    />
+                    <span className="pl-sb-children-count">{childCount}</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{childToggleLabel}</TooltipContent>
+              </Tooltip>
+            ) : null}
+
             <span
               data-sidebar-hover-actions-open={hoverActionsOpen}
               title={metaTitle}
@@ -479,16 +619,6 @@ function RealizedSidebarRow({
                 metaTitle && "pl-sb-meta-titled",
               )}
             >
-              {childToggle?.collapsed && childToggle.count ? (
-                <span className="pl-sb-children-count" aria-hidden="true">
-                  <Icon
-                    name="ChevronRight"
-                    aria-hidden="true"
-                    className="pl-sb-children-count-icon"
-                  />
-                  {childToggle.count}
-                </span>
-              ) : null}
               {projectName ? (
                 <span className="pl-sb-project" title={projectName}>
                   {shortProjectName(projectName)}
