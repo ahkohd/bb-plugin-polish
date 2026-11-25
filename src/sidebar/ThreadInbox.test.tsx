@@ -634,7 +634,7 @@ describe("row metadata", () => {
           providerId: null,
           workspaceDisplayKind: "managed-worktree",
         },
-        updatedAt: Date.now() - (2 * 60_000),
+        latestAttentionAt: Date.now() - (2 * 60_000),
       }),
     ], [
       {
@@ -660,7 +660,7 @@ describe("row metadata", () => {
 
   it("shows the activity age for an idle thread", async () => {
     render([
-      thread({ id: "thr_t", updatedAt: Date.now() - (3 * 3_600_000 + 60_000) }),
+      thread({ id: "thr_t", latestAttentionAt: Date.now() - (3 * 3_600_000 + 60_000) }),
     ]);
     await screen.findByText("A thread");
     expect(screen.getByText("3h")).toBeDefined();
@@ -671,7 +671,7 @@ describe("row metadata", () => {
       thread({
         id: "thr_new",
         indicator: "something-bb-ships-later" as never,
-        updatedAt: Date.now() - (3 * 3_600_000 + 60_000),
+        latestAttentionAt: Date.now() - (3 * 3_600_000 + 60_000),
       }),
     ]);
     await screen.findByText("A thread");

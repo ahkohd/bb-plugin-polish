@@ -330,11 +330,9 @@ function RealizedSidebarRow({
     })),
   ];
   const hoverActionsOpen = isMenuOpen ? "true" : undefined;
-  const activityTimestamp = Math.max(
-    thread.latestAttentionAt ?? 0,
-    thread.updatedAt ?? 0,
-    thread.createdAt ?? 0,
-  );
+  // The age is the last activity that wants attention, not updatedAt, which
+  // also moves when the thread is read, renamed or pinned.
+  const activityTimestamp = Math.max(thread.latestAttentionAt ?? 0, thread.createdAt ?? 0);
   const age = compactAge(activityTimestamp, appearance.now);
   const guideLeft = rowPaddingLeft(depth - 1) + GUIDE_LINE_OFFSET_PX;
 
