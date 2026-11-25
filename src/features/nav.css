@@ -282,3 +282,25 @@
     transform: none;
   }
 }
+
+/* ---------- Header row alignment (see headerAlign.ts) ----------
+   The sidebar toggle sits in the main header, left of the thread title, and
+   the sidebar's own header row shares the main header's centre line. */
+html[data-pl-header-align] [data-testid="app-sidebar-trigger-overlay"] {
+  top: var(--pl-main-header-top);
+  left: calc(var(--pl-main-header-left) - 2px);
+  height: var(--pl-main-header-height);
+  z-index: 40;
+}
+
+html[data-pl-header-align] [data-testid="app-page-header-content-row"] {
+  padding-left: calc(var(--bb-sidebar-control-size, 28px) + 6px) !important;
+}
+
+html[data-pl-header-align] [data-testid="app-sidebar-top-reserve-row"] {
+  margin-top: calc(var(--pl-main-header-top) + (var(--pl-main-header-height) - var(--bb-app-chrome-row-height, 48px)) / 2);
+}
+
+html[data-pl-header-align] [data-testid="app-sidebar-top-reserve-row"] > div:has(> [data-sidebar-header-slot]) {
+  padding-left: env(safe-area-inset-left, 0px);
+}

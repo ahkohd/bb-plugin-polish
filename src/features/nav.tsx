@@ -13,6 +13,7 @@ import { usePortalScopeProps } from "../sidebar/lib/portal-scope";
 import { ProjectPicker } from "../sidebar/ProjectPicker";
 import { ALL_PROJECTS, projectScope, useProjectScope } from "../sidebar/projectScope";
 import { badgeText, splitNavigation } from "./nav-model";
+import { useHeaderAlign } from "./headerAlign";
 import "./nav.css";
 
 function HeaderActionButton({ item, controlSize }: { item: Item; controlSize: number }) {
@@ -62,11 +63,12 @@ function HeaderActionButton({ item, controlSize }: { item: Item; controlSize: nu
 // whenever Polish's thread list is showing and there is room for it.
 const HEADER_PICKER_MIN_WIDTH = 72;
 
-function HeaderControls({ width, controlSize }: ExperimentalSidebarHeaderProps) {
+function HeaderControls({ width, controlSize, isCompactViewport }: ExperimentalSidebarHeaderProps) {
   const { items } = useNavigation();
   const { search, newThread } = splitNavigation(items);
   const { scope, projects } = useProjectScope();
   useEffect(() => projectScope.mountHeader(), []);
+  useHeaderAlign(!isCompactViewport);
 
   if (width < controlSize) return null;
 
