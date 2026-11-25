@@ -146,6 +146,23 @@ function Dock({ isCompactViewport }: ExperimentalSidebarNavigationProps) {
   const root = useRef<HTMLDivElement>(null);
   const more = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const { listRight } = useProjectScope();
+  const [rightInset, setRightInset] = useState(0);
+  // Line the counts up with the thread list below, whose slot may end short of ours.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const measure = () => {
+      const inset = listRight === null ? 0 : Math.round(nav.getBoundingClientRect().right - listRight);
+      setRightInset(inset > 0 && inset < 48 ? inset : 0);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [listRight]);
   const close = () => {
     setOpen(false);
     more.current?.focus();
@@ -162,7 +179,7 @@ function Dock({ isCompactViewport }: ExperimentalSidebarNavigationProps) {
   }, [open]);
 
   return (
-    <nav className="pl-nav" data-compact={isCompactViewport} aria-label="Sidebar navigation">
+    <nav ref={navRef} className="pl-nav" style={rightInset ? { paddingRight: 8 + rightInset } : undefined} data-compact={isCompactViewport} aria-label="Sidebar navigation">
       <div className="pl-nav-list">
         {visible.map((item) => (
           <NavRow key={item.id} item={item} />

@@ -11,9 +11,11 @@ interface ProjectScopeState {
   scope: string;
   projects: readonly ProjectOption[];
   headerMounts: number;
+  /** The thread list's right edge in viewport px, or null when it is not shown. */
+  listRight: number | null;
 }
 
-let state: ProjectScopeState = { scope: ALL_PROJECTS, projects: [], headerMounts: 0 };
+let state: ProjectScopeState = { scope: ALL_PROJECTS, projects: [], headerMounts: 0, listRight: null };
 const listeners = new Set<() => void>();
 
 function update(next: Partial<ProjectScopeState>): void {
@@ -36,6 +38,9 @@ export const projectScope = {
   },
   setProjects(projects: readonly ProjectOption[]): void {
     if (projects !== state.projects) update({ projects });
+  },
+  setListRight(listRight: number | null): void {
+    if (listRight !== state.listRight) update({ listRight });
   },
   mountHeader(): () => void {
     update({ headerMounts: state.headerMounts + 1 });

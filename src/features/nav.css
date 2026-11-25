@@ -94,8 +94,8 @@
 /* Navigation list: Capy-style labelled rows, 8px side padding, no hairline below. */
 .pl-nav {
   position: relative;
-  /* Right edge matches the thread list, whose scroll area keeps a gutter. */
-  padding: 4px 18px 6px 8px;
+  /* nav.tsx adds to the right padding so counts line up with the thread list. */
+  padding: 4px 8px 6px;
   color: var(--foreground);
 }
 

@@ -131,6 +131,23 @@ export function ThreadInbox({
   useEffect(() => {
     projectScope.setProjects(projects);
   }, [projects]);
+  // The navigation above lines its counts up with this list's right edge.
+  // bb's thread-list slot can be narrower than the navigation's (a classic
+  // scrollbar gutter on Linux and Windows, none on macOS), so publish it.
+  useEffect(() => {
+    const el = scrollRef.current?.parentElement;
+    if (!el) return;
+    const apply = () => projectScope.setListRight(Math.round(el.getBoundingClientRect().right));
+    apply();
+    window.addEventListener("resize", apply);
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(apply);
+    observer?.observe(el);
+    return () => {
+      window.removeEventListener("resize", apply);
+      observer?.disconnect();
+      projectScope.setListRight(null);
+    };
+  }, []);
   // The filter starts at All projects each time the list mounts, as before.
   useEffect(() => () => projectScope.setScope(ALL_PROJECTS), []);
   const { collapsedShelves, expandedParents, toggleShelf, toggleParent } =
