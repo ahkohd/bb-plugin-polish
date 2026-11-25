@@ -619,7 +619,7 @@ describe("thread actions", () => {
 });
 
 describe("row metadata", () => {
-  it("shows the title, lowercase project name and age without provider or host noise", async () => {
+  it("shows the title and age, with the project in the tooltip, without provider or host noise", async () => {
     render([
       thread({
         id: "thr_m",
@@ -649,7 +649,8 @@ describe("row metadata", () => {
     expect(screen.queryByLabelText("Claude Code")).toBeNull();
     expect(screen.queryByText("Sawyer's MacBook")).toBeNull();
     expect(screen.queryByText("bb/feature")).toBeNull();
-    expect(screen.getByText("execa")).toBeDefined();
+    expect(screen.queryByText("execa")).toBeNull();
+    expect(document.querySelector('[title="Execa"]')).not.toBeNull();
     expect(screen.getByText("2m")).toBeDefined();
     // Scoping to one project hides the project name and keeps the age.
     fireEvent.click(screen.getByLabelText(/Project scope/));

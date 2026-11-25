@@ -613,18 +613,15 @@ function RealizedSidebarRow({
 
             <span
               data-sidebar-hover-actions-open={hoverActionsOpen}
-              title={metaTitle}
+              title={metaTitle ?? projectName ?? undefined}
               className={joinClasses(
                 "bb-sidebar-hover-actions-fade pl-sb-meta",
                 metaTitle && "pl-sb-meta-titled",
               )}
             >
-              {projectName ? (
-                <span className="pl-sb-project" title={projectName}>
-                  {shortProjectName(projectName)}
-                </span>
-              ) : null}
-              <span className="pl-sb-age">{age}</span>
+              {/* Only the age shows at rest; the project is in the tooltip
+                  and in the filter at the top, which keeps the column quiet. */}
+              <span className="pl-sb-age" data-project={projectName ? shortProjectName(projectName) : undefined}>{age}</span>
             </span>
 
             <div

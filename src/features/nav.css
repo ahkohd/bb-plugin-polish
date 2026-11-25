@@ -94,7 +94,8 @@
 /* Navigation list: Capy-style labelled rows, 8px side padding, no hairline below. */
 .pl-nav {
   position: relative;
-  padding: 4px 8px 6px;
+  /* Right edge matches the thread list, whose scroll area keeps a gutter. */
+  padding: 4px 18px 6px 8px;
   color: var(--foreground);
 }
 
@@ -185,13 +186,15 @@
   margin-left: auto;
   flex: none;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 450;
   font-variant-numeric: tabular-nums;
-  color: var(--muted-foreground);
+  color: var(--subtle-foreground);
 }
 
+/* The needs-you pill already tints what waits on you; counts here stay plain,
+   like the section counts below them. */
 .pl-nav-count[data-tone="warning"] {
-  color: var(--warning-text);
+  color: var(--muted-foreground);
 }
 
 .pl-nav-dot {
