@@ -567,6 +567,7 @@ function RealizedSidebarRow({
             ) : (
               <span
                 className="pl-sb-title"
+                title={[projectName, age].filter(Boolean).join(" · ") || undefined}
                 data-unread={thread.isUnread ? "true" : undefined}
                 data-active={isActive ? "true" : undefined}
                 data-muted={muted ? "true" : undefined}

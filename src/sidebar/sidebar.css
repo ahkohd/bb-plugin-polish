@@ -918,3 +918,30 @@
     animation: none;
   }
 }
+
+/* ---------- Quiet at rest ----------
+   Rows show only the dot and the title at rest. The age and project are in
+   the title's tooltip; the child count and the row's actions come up on hover
+   or keyboard focus. Every count that stays (navigation, sections, shelves)
+   ends at the same right edge. */
+.pl-sb-meta {
+  display: none;
+}
+
+.pl-sb-children-btn {
+  display: none;
+}
+
+.pl-sb-row:is(:hover, :has(:focus-visible), :has([data-sidebar-hover-actions-open="true"])) .pl-sb-children-btn {
+  display: inline-flex;
+}
+
+@media (hover: none) {
+  .pl-sb-children-btn {
+    display: inline-flex;
+  }
+}
+
+.pl-sb-shelf-actions {
+  right: 2px;
+}

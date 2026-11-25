@@ -963,16 +963,6 @@ function Shelf({
               </span>
             ) : null}
             <span className="pl-sb-shelf-count">{count}</span>
-            {dock ? (
-              <Icon
-                name="ChevronRight"
-                aria-hidden="true"
-                className={joinClasses(
-                  "pl-sb-dock-chevron",
-                  !collapsed && "is-open",
-                )}
-              />
-            ) : null}
           </span>
         </button>
         {actions ? (
